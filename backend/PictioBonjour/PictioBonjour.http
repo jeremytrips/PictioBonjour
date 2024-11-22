@@ -1,0 +1,6 @@
+@PictioBonjour_HostAddress = http://localhost:5095
+
+GET {{PictioBonjour_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
