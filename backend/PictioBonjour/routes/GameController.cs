@@ -3,8 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace PictioBonjour.routes
 {
-    [Route("api/[controller]")]
     [ApiController]
+    [Route("api/[controller]")]
     public class GameController : ControllerBase
     {
         [HttpGet("startGame")]
