@@ -17,7 +17,7 @@ var app = builder.Build();
 app.MapHub<GameManager>("/Game");
 app.UseRouting();
 app.MapControllers();
-// Configure the HTTP request pipeline.
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
