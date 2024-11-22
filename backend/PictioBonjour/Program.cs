@@ -1,3 +1,5 @@
+using PictioBonjour.SigalR;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -6,9 +8,15 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddControllers();
 
+builder.Services.AddSignalR();
+
+
 
 var app = builder.Build();
 
+app.MapHub<GameManager>("/Game");
+app.UseRouting();
+app.MapControllers();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
