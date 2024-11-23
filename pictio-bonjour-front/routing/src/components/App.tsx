@@ -48,16 +48,20 @@ function App() {
       })
 
       connectionRef.current.on("ReceivePotentialEmojis", (data)=>{
-        setPotentialEmoji(data)
         console.log(data);
+        console.log(currentState);
+        //setPotentialEmoji(data)
         setCurrentState(states.Playing)
+        
+        
       })
 
       connectionRef.current.on("ReceiveTargetEmojis", (data)=>{
-        setTargetEmoji(data)
         console.log(data);
-        
+        console.log(currentState);
+        //setTargetEmoji(data)
         setCurrentState(states.Playing)
+     
       })
         
 
@@ -66,7 +70,7 @@ function App() {
     });
     if (userState !== UserState.Drawer) {
       connectionRef.current.on("onCanvasDrawed", (word) => {
-        setEmojis(word)
+        // setEmojis(word)
       });
       
     }
@@ -79,6 +83,7 @@ function App() {
 
 
   const play = () => {
+    
     connectionRef.current?.invoke("OnGameStarter")
   }
 
@@ -86,17 +91,17 @@ function App() {
 
     switch (state) {
       case States.Ready:
-        console.log("ready");
         return (
           <>
-            {
-              userState === 0 ? <PlayButton onClick={play} /> : ""
-            }
+            <p className="title">less is more</p>
+            <div style={{  }}>
+              {
+                userState === 0 ? <PlayButton onClick={play} /> : ""
+              }
+            </div>
           </>
-
         );
       case States.Playing:
-        console.log("playing");
         
         return <>
           {
@@ -122,14 +127,12 @@ function App() {
         return null;
     }
   };
- 
-  
-   return (
-    
-    <div className="container">
+
+
+  return (
+    <div className="container" style={{ display: 'flex', flexDirection: 'row' }}>
       {renderComponent(currentState)}
     </div>
-    
   );
 
 }
