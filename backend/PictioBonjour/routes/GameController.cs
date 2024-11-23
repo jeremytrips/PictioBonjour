@@ -9,16 +9,18 @@ namespace PictioBonjour.routes
     public class GameController : ControllerBase
     {
         private readonly GameManagerService _gameManagerService;
+        private  EmojieGeneratorService gameService=new EmojieGeneratorService(); 
 
         public GameController(GameManagerService gameManagerService)
         {
             _gameManagerService = gameManagerService;
         }
+
+       
         [HttpGet("startGame")]
         public IActionResult StartGame()
         {
-
-            return Ok();
+                 return Ok();
         }
 
         [HttpGet("create-game")]
