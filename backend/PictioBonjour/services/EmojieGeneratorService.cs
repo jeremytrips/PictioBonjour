@@ -68,9 +68,23 @@
                 int randomIndex = random.Next(emojis.Count);
                 uniqueEmojis.Add(emojis[randomIndex]);
             }
+               List<string> potentialEmojis =uniqueEmojis.ToList();
+                ShuffleList(potentialEmojis);
+                return potentialEmojis ;
 
-            return uniqueEmojis.ToList();
-
+        }
+        static void ShuffleList(List<string> list)
+        {
+            Random rng = new Random();
+            int n = list.Count;
+            while (n > 1)
+            {
+                n--;
+                int k = rng.Next(n + 1);
+                string value = list[k];
+                list[k] = list[n];
+                list[n] = value;
+            }
         }
     }
 }
