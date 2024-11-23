@@ -7,8 +7,6 @@ import Paint from "./Paint";
 import Guesser from "./Guesser";
 
 enum States {
-  Lobby = "Lobby",
-  Searching = "searching",
   Ready = "ready",
   Playing = "playing",
   Done = "done",
@@ -20,32 +18,13 @@ enum UserState {
 }
 
 
-
-
-async function joinGame(connection: HubConnection) {
-  if (!connection) {
-    return
-  }
-  try {
-    await connection.invoke("JoinGame");
-  } catch (error) {
-    console.error(error)
-  }
-}
-
-async function startGame(connection: HubConnection) {
-  if (!connection) {
-    return
-  }
-}
-
-
 function App() {
-  const [currentState, setCurrentState] = useState(States.Lobby);
+  const [currentState, setCurrentState] = useState(States.Ready);
   const [connection, setConnection] = useState<HubConnection | null>(null)
   const [playersNumber, setPlayersNumber] = useState(0)
   const [userState, SetUserState] = useState<UserState | null>(null);
-  const [emojis, setEmojis] = useState("");
+  const [target_emojis, setTargetEmoji] = useState("");
+  const [potential_emojis, setPotentialEmoji] = useState<string[]>([]);
   const connectionRef = useRef<HubConnection | null>(null);
 
   window.onbeforeunload = function () {
@@ -65,6 +44,19 @@ function App() {
       connectionRef.current.on("onStatusChanged", (state)=>{
         SetUserState(state)
       })
+
+      connectionRef.current.on("ReceivePotentialEmojis", (data)=>{
+        setPotentialEmoji(data)
+        setCurrentState(states.Playing)
+      })
+
+      connectionRef.current.on("ReceiveTargetEmojis", (data)=>{
+        setTargetEmoji(data)
+        console.log(data);
+        
+        SetUserState(states.Playing)
+      })
+        
     return () => {
       connectionRef.current?.invoke("LeaveGame")
       console.log("unmounting")
@@ -72,15 +64,15 @@ function App() {
   }, [])
 
   const play = () => {
-    connectionRef.current?.invoke("StartGame")
+    connectionRef.current?.invoke("OnGameStarter")
   }
 
   function renderComponent(state: States) {
 
     switch (state) {
-      case States.Lobby:
+      case States.Ready:
+        console.log("ready");
         return (
-
           <>
             {
               userState === 0 ? <PlayButton onClick={play} /> : ""
@@ -88,12 +80,9 @@ function App() {
           </>
 
         );
-      case States.Ready:
-        return <div>Ready</div>
-      case States.Searching:
-        return <div>Searching...</div>;
       case States.Playing:
-
+        console.log("playing");
+        
         return <>
           {
             userState === 0 ? <Paint /> : <Guesser />
@@ -110,7 +99,6 @@ function App() {
 
   return (
     <div className="container">
-      <p>{currentState}|{playersNumber}|{userState}</p>
       {renderComponent(currentState)}
     </div>
   );
