@@ -1,0 +1,63 @@
+/* CuteGauge.css */
+.gauge-container {
+    width: 100%;
+    max-width: 400px;
+    margin: 20px auto;
+    text-align: center;
+    font-family: Arial, sans-serif;
+}
+
+.gauge-label {
+    font-size: 1.2rem;
+    margin-bottom: 8px;
+    color: #444;
+}
+
+.gauge-bar {
+    width: 100%;
+    height: 20px;
+    background: #f0f0f0;
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.gauge-fill {
+    height: 100%;
+    border-radius: 10px;
+    transition: width 0.5s ease;
+}
+
+.gauge-text {
+    margin-top: 8px;
+    font-size: 0.9rem;
+    color: #555;
+}
+
+@keyframes shake {
+    0% {
+        transform: translateX(0);
+    }
+
+    25% {
+        transform: translateX(-5px);
+    }
+
+    50% {
+        transform: translateX(5px);
+    }
+
+    75% {
+        transform: translateX(-5px);
+    }
+
+    100% {
+        transform: translateX(0);
+    }
+}
+
+/* Shake class to apply the animation */
+.shake {
+    animation: shake 0.5s ease-in-out;
+}

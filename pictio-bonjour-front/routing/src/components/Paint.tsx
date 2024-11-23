@@ -1,14 +1,14 @@
 import { useRef, useState, useCallback, useEffect } from "react";
 import { Stage, Layer, Rect as KonvaRect, Transformer } from "react-konva";
 import { Line as KonvaLine } from "react-konva";
-import { KonvaEventObject, Node } from "konva/lib/Node";
+import { KonvaEventObject } from "konva/lib/Node";
 import ExportIcon from "../assets/images.png";
-import ScribbleIcon from "../assets/scribble.png";
 import OnclearIcon from "../assets/onclear.png";
-import SelectIcon from "../assets/select.jpg";
 import Konva from "konva";
 import { UserState } from "./App";
 import { HubConnection } from "@microsoft/signalr";
+import CuteGauge from "./gauge";
+import "./paint.css"
 
 const CANVAS_SIZE = 500;
 
@@ -24,9 +24,22 @@ interface Scribble {
   color: string;
 }
 
-const Paint = (props: { userState: UserState, connection: HubConnection }) => {
-  const [color, setColor] = useState("#000");
-  const [drawAction, setDrawAction] = useState<DrawAction>(DrawAction.Select);
+const colors = [
+  "#FFEB3B",
+  "#03A9F4",
+  "#F44336",
+  "#4CAF50",
+  "#9C27B0",
+  "#FF9800",
+  "#E91E63",
+  "#00BCD4"
+] as const;
+
+const MAX_VALUE = 10_000;
+
+const Paint = (props: { userState: UserState, connection: HubConnection}) => {
+  const [color, setColor] = useState<string>(colors[0]);
+  const [drawAction, setDrawAction] = useState<DrawAction>(DrawAction.Scribble);
   const [scribbles, setScribbles] = useState<Scribble[]>([]);
   const [, setSelectedId] = useState<string | null>(null);
   const [dataframeSize, setDataframeSize] = useState(0);
@@ -38,8 +51,6 @@ const Paint = (props: { userState: UserState, connection: HubConnection }) => {
 
   useEffect(() => {
     const intervalId = setInterval(() => {
-      console.log("in")
-      console.log(dataframeSizeRef.current);
       setDataframeSize(dataframeSizeRef.current)
     }, 100);
     () => clearInterval(intervalId);
@@ -80,6 +91,10 @@ const Paint = (props: { userState: UserState, connection: HubConnection }) => {
   // Start drawing a scribble
   const onStageMouseDown = useCallback(() => {
     if (drawAction !== DrawAction.Scribble) return;
+    if (dataframeSizeRef.current > MAX_VALUE) {
+      applyShake()
+      return;
+    }
 
     isPainting.current = true;
     const stage = stageRef.current;
@@ -104,19 +119,32 @@ const Paint = (props: { userState: UserState, connection: HubConnection }) => {
   const handleSendDrawEvent = async () => {
     const stage = stageRef.current;
     const pos = stage!.toJSON();
-    if (pos && dataframeSizeRef.current <30_000) {
+    if (pos && dataframeSizeRef.current < MAX_VALUE) {
       dataframeSizeRef.current = pos.length;
       props.connection.invoke("DrawEvent", pos);
     }
   }
 
+  const applyShake = () => {
+    const gaugeElement = document.getElementById("gauge");
+    if (gaugeElement) {
+      gaugeElement.classList.add("shake");
+      setTimeout(() => {
+        gaugeElement.classList.remove("shake");
+      }, 500);
+    }
+  }
+
   // Continue drawing
   const onStageMouseMove = useCallback(() => {
+    const length = stageRef.current!.toJSON().length;
+    if (length && dataframeSizeRef.current > MAX_VALUE) {
+      applyShake()
+      return;
+    }
+
     if (!isPainting.current || drawAction !== DrawAction.Scribble)
       return;
-    const length = stageRef.current!.toJSON().length;
-    if (length && dataframeSizeRef.current > 30_000) 
-      return
 
     if (props.userState === UserState.Drawer) {
       handleSendDrawEvent();
@@ -134,8 +162,6 @@ const Paint = (props: { userState: UserState, connection: HubConnection }) => {
       );
     }
   }, [drawAction]);
-
-
 
   // Handle scribble selection
   const onShapeClick = useCallback(
@@ -163,47 +189,48 @@ const Paint = (props: { userState: UserState, connection: HubConnection }) => {
   const isDraggable = drawAction === DrawAction.Select;
 
   return (
-    <div>
-      <p>{Math.round(100-(dataframeSize / 30_000)*100)}</p>
-
+    <div
+      onMouseLeave={()=>{
+        if (isPainting.current) {
+          isPainting.current = false;
+        }
+      }}
+    >
       {props.userState === UserState.Drawer ?
-        <div style={{ display: "flex", gap: "10px", marginBottom: "10px" }}>
-          <button onClick={() => setDrawAction(DrawAction.Select)}>
-            <img src={SelectIcon} alt="Select" style={{ width: 30, height: 30 }} />
-          </button>
-          <button onClick={() => setDrawAction(DrawAction.Scribble)}>
-            <img
-              src={ScribbleIcon}
-              alt="Scribble"
-              style={{ width: 30, height: 30 }}
-            />
-          </button>
-          <button onClick={onClearClick}>
-            <img
-              src={OnclearIcon}
-              alt="Clear"
-              style={{ width: 30, height: 30 }}
-            />
-          </button>
-          <button onClick={onExportClick}>
-            <img
-              src={ExportIcon}
-              alt="Export"
-              style={{ width: 30, height: 30 }}
-            />
-          </button>
-          <input
-            type="color"
-            value={color}
-            onChange={(e) => setColor(e.target.value)}
-          />
+        <div className="painterheader">
+          <div className="colorsPallete">
+            {colors.map((c) => (
+              <div
+                key={c}
+                className="colorDiv"
+                style={{
+                  backgroundColor: c,
+                  border: c === color ? "2px solid black" : "2px solid white"
+                }}
+                onClick={() => setColor(c)}
+              />
+            ))}
+          </div>
+          <div className="actionContainer">
+            <div onClick={onClearClick} className="actionButton">
+              <img
+                src={"/assets/erase.png"}
+                alt="Clear"
+                style={{ width: 30, height: 30 }}
+              />
+            </div>
+          </div>
+
         </div>
         : null}
 
-      {/* Canvas */}
+      <CuteGauge
+        value={100 - Math.round(100 - (dataframeSize / MAX_VALUE) * 100)}
+        maxValue={100}
+      />
       <Stage
-        width={700}
-        height={700}
+        width={CANVAS_SIZE}
+        height={CANVAS_SIZE}
         style={{ border: "1px solid black" }}
         ref={stageRef}
         onMouseDown={onStageMouseDown}

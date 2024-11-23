@@ -48,14 +48,12 @@ function App() {
 
       connectionRef.current.on("ReceivePotentialEmojis", (data)=>{
         setPotentialEmoji(data)
-        setCurrentState(states.Playing)
       })
 
       connectionRef.current.on("ReceiveTargetEmojis", (data)=>{
         setTargetEmoji(data)
         console.log(data);
         
-        setCurrentState(states.Playing)
       })
         
 
@@ -64,7 +62,7 @@ function App() {
     });
     if (userState !== UserState.Drawer) {
       connectionRef.current.on("onCanvasDrawed", (word) => {
-        setEmojis(word)
+        // setEmojis(word)
       });
       
     }
@@ -123,7 +121,6 @@ function App() {
   return (
     <div className="container">
       {renderComponent(currentState)}
-    </div>
     </div>
   );
 
