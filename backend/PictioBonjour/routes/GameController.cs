@@ -9,19 +9,19 @@ namespace PictioBonjour.routes
     public class GameController : ControllerBase
     {
         private readonly GameManagerService _gameManagerService;
-        private  EmojieGeneratorService gameService=new EmojieGeneratorService(); 
+        private EmojieGeneratorService gameService = new EmojieGeneratorService();
 
         public GameController(GameManagerService gameManagerService)
         {
             _gameManagerService = gameManagerService;
         }
 
-       
+
         [HttpGet("startGame")]
         public IActionResult StartGame()
         {
-                 return Ok();
-            
+            return Ok();
+
         }
 
 
@@ -38,6 +38,24 @@ namespace PictioBonjour.routes
             {
                 return NotFound("Game not found");
             }
+        }
+        [HttpPost("submit-emojie")]
+        public IActionResult SubmitEmoji([FromBody] string choice)
+        {
+            if (choice == null || string.IsNullOrWhiteSpace(choice))
+            {
+                return BadRequest("Invalid emoji choice.");
+            }
+            string unicodeWithPrefix = GetUnicodeWithPrefix(choice);
+            bool isCorrect = unicodeWithPrefix == gameService.randomTargetEmojie;
+            _gameManagerService.ResetGame();
+            return Ok(new { isCorrect });
+        }
+
+        private string GetUnicodeWithPrefix(string emoji)
+        {
+            int codePoint = emoji[0];
+            return $"U+{codePoint:X4}";
         }
     }
 }

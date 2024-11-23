@@ -43,7 +43,7 @@ public class GameManagerHub : Hub
         }
 
 
-    // G�n�rer les emojis
+        // G�n�rer les emojis
         var targetEmojis = _gameManagerService.EmojieGenerator.GenerateTargetEmoji();
         var potentialEmojis = _gameManagerService.EmojieGenerator.GeneratePotentialEmoji();
 
@@ -79,6 +79,23 @@ public class GameManagerHub : Hub
     {
         Console.WriteLine(canvas.Length);
         Clients.Others.SendAsync(DrawEventResp, canvas);
+    }
+    public async Task SubmitEmoji(string PlayerEmojisChoice)
+    {
+        if (PlayerEmojisChoice == null) return;
+        string _playerEmojisChoice = GetUnicodeWithPrefix(PlayerEmojisChoice);
+        string targetEmojis= _gameManagerService.EmojieGenerator.randomTargetEmojie; 
+        
+        
+        bool isCorrect = PlayerEmojisChoice == targetEmojis; //si un players choisit the wrong emojis gameIs stopped 
+        OnResetGame();
+        await Clients.All.SendAsync("GameUpdate", new { isCorrect, targetEmojis });
+    }
+
+    private string GetUnicodeWithPrefix(string emoji)
+    {
+        int codePoint = emoji[0];
+        return $"U+{codePoint:X4}";
     }
 
     public void OnResetGame(){

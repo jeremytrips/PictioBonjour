@@ -3,7 +3,7 @@
     public class EmojieGeneratorService
     {
         private List<string> emojis = new List<string>();
-        private string randomTargetEmojie;
+        public string randomTargetEmojie {  get; private  set; }
         public EmojieGeneratorService()
         {
             addEmojisToListEmjis();
