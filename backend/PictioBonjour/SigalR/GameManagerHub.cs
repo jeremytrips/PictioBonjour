@@ -8,7 +8,6 @@ namespace PictioBonjour.SigalR;
 public class GameManagerHub: Hub
 {
     private readonly GameManagerService _gameManagerService;
-    private Game? _game;
 
     public GameManagerHub(GameManagerService gameManagerService)
     {
@@ -18,22 +17,16 @@ public class GameManagerHub: Hub
 
     public async Task JoinGame()
     {
-        if (_game is null)
-        {
-            _game = new Game()
-            {
-                Id = Guid.NewGuid().ToString(),
-                State = EGameSate.waiting,
-                CurrentDrawer = Context.ConnectionId,
-            };
-            await Clients.Caller.SendAsync("onStatusChanged", EPlayerType.Drawer);
-        }else
-        {
-            await Clients.Caller.SendAsync("onStatusChanged", EPlayerType.Player);
-        }
-        await Clients.All.SendAsync("playerListUpdated", _game.Players.Count + 1);
+        var playerType = _gameManagerService.JoinGame(Context.ConnectionId);
+        await Clients.Caller.SendAsync("onStatusChanged", playerType);
+        await Clients.All.SendAsync("playerListUpdated", _gameManagerService.AmountOfPlayers + 1);
     }
 
+    public async Task OnLeaveGame()
+    {
+        _gameManagerService.LeaveGame(Context.ConnectionId);
+        await Clients.All.SendAsync("playerListUpdated", _gameManagerService.AmountOfPlayers);
+    }
 
     public void OnDrawEvent(byte[] canvas)
     {

@@ -23,13 +23,6 @@ namespace PictioBonjour.routes
                  return Ok();
         }
 
-        [HttpGet("list")]
-        public ActionResult<string> StartGameToMerge()
-        {
-            var gamesId = _gameManagerService.GetGames();
-            return Ok(gamesId);
-        }
-
         [HttpGet("joinGame/{gameId}/{userName}")]
         public IActionResult JoinGame(string gameId, string userName)
         {

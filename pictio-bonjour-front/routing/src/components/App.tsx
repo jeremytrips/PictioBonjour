@@ -54,9 +54,15 @@ function App() {
     })
 
     connection.on("playerListUpdated",(data)=>{
+      console.log("playerListUpdated",data)
       setPlayersNumber(data)
     })
-
+    return()=>{
+      connection.invoke("OnLeaveGame");
+      // connection.off("onStatusChanged");
+      // connection.off("playerListUpdated");
+      connection.stop();
+    }
   },[])
 
 
