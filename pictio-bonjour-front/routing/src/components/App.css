@@ -9,3 +9,7 @@
 .play-button {
   cursor: pointer;
 }
+
+.play-button:hover {
+  color: purple;
+}
