@@ -85,11 +85,13 @@ function App() {
         console.log("ready");
         return (
           <>
-            {
-              userState === 0 ? <PlayButton onClick={play} /> : ""
-            }
+            <p className="title">less is more</p>
+            <div style={{  }}>
+              {
+                userState === 0 ? <PlayButton onClick={play} /> : ""
+              }
+            </div>
           </>
-
         );
       case States.Playing:
         console.log("playing");
@@ -119,7 +121,7 @@ function App() {
 
 
   return (
-    <div className="container">
+    <div className="container" style={{ display: 'flex', flexDirection: 'row' }}>
       {renderComponent(currentState)}
     </div>
   );
