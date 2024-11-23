@@ -1,17 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import {
-  HubConnection,
-  HubConnectionBuilder,
-  HubConnectionState,
-  LogLevel,
-} from "@microsoft/signalr";
+import { HubConnection, HubConnectionBuilder } from '@microsoft/signalr'
 import "./App.css";
 import PlayButton from "./PlayButton";
-import Painter from "./Painter";
 import Paint from "./Paint";
-import Guesser from "./Guesser";
-import { parse } from "uuid";
-import { div, p } from "framer-motion/client";
 
 enum States {
   Ready = "ready",
@@ -26,8 +17,6 @@ export enum UserState {
 
 function App() {
   const [currentState, setCurrentState] = useState(States.Ready);
-  const [connection, setConnection] = useState<HubConnection | null>(null);
-  const [playersNumber, setPlayersNumber] = useState(0);
   const [userState, SetUserState] = useState<UserState | null>(null);
   const [target_emojis, setTargetEmoji] = useState("");
   const [potential_emojis, setPotentialEmoji] = useState<string[]>([]);
@@ -50,24 +39,19 @@ function App() {
       SetUserState(state);
     });
 
-    connectionRef.current.on("ReceivePotentialEmojis", (data) => {
-      setPotentialEmoji(data);
-      setCurrentState(States.Playing);
-    });
+    connectionRef.current.on("ReceivePotentialEmojis", (data)=>{
+      setPotentialEmoji(data)
+      setCurrentState(States.Playing)
+    })
 
-    connectionRef.current.on("ReceiveTargetEmojis", (data) => {
-      setTargetEmoji(data);
-      setCurrentState(States.Playing);
-    });
+    connectionRef.current.on("ReceiveTargetEmojis", (data)=>{
+      setTargetEmoji(data)
+      setCurrentState(States.Playing)
+    })
 
     connectionRef.current.on("onStatusChanged", (state) => {
       SetUserState(state);
     });
-    if (userState !== UserState.Drawer) {
-      connectionRef.current.on("onCanvasDrawed", (word) => {
-        // setEmojis(word)
-      });
-    }
 
     return () => {
       connectionRef.current?.invoke("LeaveGame");
@@ -76,8 +60,8 @@ function App() {
   }, []);
 
   const play = () => {
-    connectionRef.current?.invoke("OnGameStarter");
-  };
+    connectionRef.current?.invoke("OnGameStarter")
+  }
 
   function renderComponent(state: States) {
     switch (state) {
@@ -91,22 +75,14 @@ function App() {
           </>
         );
       case States.Playing:
-        return (
-          <>
-            {
-              <div
-                className="container"
-                style={{ display: "flex", flexDirection: "row" }}
-              >
-                <Paint
-                  connection={connectionRef.current!}
-                  userState={userState!}
-                />
-              </div>
-            }
-          </>
-        );
+        return <>
+          {
+            <div className="container" style={{display: 'flex', flexDirection: 'row'}}>
 
+              <Paint connection={connectionRef.current!} userState={userState!} />
+            </div>
+          }
+        </>
       default:
         return null;
     }
