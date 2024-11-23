@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { HubConnection, HubConnectionBuilder, LogLevel } from '@microsoft/signalr'
 import "./App.css";
 
 enum States {
@@ -10,14 +11,66 @@ enum States {
 
 function App() {
   const [currentState, setCurrentState] = useState(States.Lobby);
+  const [connection,setConnection] = useState<HubConnection|null>(null)
+  const [playersNumber, setPlayersNumber] = useState(0)
+  
 
-  const renderComponent = () => {
-    switch (currentState) {
+  async function joinGame(){
+    if(!connection){
+      return 
+    }
+
+    try {
+     await connection.invoke("JoinGame");
+      console.log("joinned game")
+      setTimeout(()=>{
+        setCurrentState(States.Searching)
+      },2000)
+      
+    } catch (error) {
+     console.error(error) 
+    }
+  }
+  
+  useEffect(()=>{
+
+    const connection = new HubConnectionBuilder()
+    .withUrl("http://localhost:5095/hub/game") 
+    .withAutomaticReconnect() 
+    .configureLogging(LogLevel.Information) 
+    .build();
+
+    setConnection(connection)
+
+    connection.start()
+      .then(()=>{
+        console.log("connected")
+      })
+      .catch((error)=>{
+        console.error(error)
+      })
+
+    connection.on("onStatusChanged",(data)=>{
+      console.log("change",()=>data);
+    })
+
+    connection.on("playerListUpdated",(data)=>{
+      setPlayersNumber(data)
+    })
+
+  },[])
+
+
+
+  function renderComponent(state:States) {
+     
+  
+    switch (state) {
       case States.Lobby:
         return (
           <img
             className="play-button"
-            onClick={() => setCurrentState(States.Searching)}
+            onClick={joinGame}
             src="play-button.svg"
             alt=""
           />
@@ -33,7 +86,7 @@ function App() {
     }
   };
 
-  return <div className="container">{renderComponent()}</div>;
+  return <div className="container">{renderComponent(currentState)}</div>;
 }
 
 export default App;
