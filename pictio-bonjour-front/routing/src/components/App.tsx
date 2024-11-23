@@ -55,7 +55,7 @@ function App() {
         setTargetEmoji(data)
         console.log(data);
         
-        SetUserState(states.Playing)
+        setCurrentState(states.Playing)
       })
         
 
@@ -98,7 +98,17 @@ function App() {
         
         return <>
           {
-            <Paint connection={connectionRef.current!} userState={userState!} />
+           
+            <div className="container" style={{display: 'flex', flexDirection: 'row'}}>
+        <div >
+          <p>{JSON.stringify(userState)}</p>
+          <p>{connectionRef.current?"connected":"not connected"}</p>
+        </div>
+        {
+          connectionRef.current && userState!==null && <Paint connection={connectionRef.current!} userState={userState!} />
+        }
+        <p>{currentState}|{playersNumber}|{userState}</p>
+      </div>
           }
 
         </>
@@ -113,14 +123,6 @@ function App() {
   return (
     <div className="container">
       {renderComponent(currentState)}
-    <div className="container" style={{display: 'flex', flexDirection: 'row'}}>
-      <div >
-        <p>{JSON.stringify(userState)}</p>
-        <p>{connectionRef.current ? "connected" : "not connected"}</p>
-      </div>
-      {connectionRef.current && userState !== null && <Paint connection={connectionRef.current!} userState={userState!} />}
-      <p>{currentState}|{playersNumber}|{userState}</p>
-      {/* {renderComponent(currentState)} */}
     </div>
     </div>
   );
