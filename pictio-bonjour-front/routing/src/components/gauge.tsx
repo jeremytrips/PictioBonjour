@@ -30,8 +30,6 @@ const CuteGauge = ({ value, maxValue }: {value: number, maxValue: number}) => {
 
   return (
     <div id="gauge" className="gauge-container">
-        <p>{value}</p>
-        <p>{maxValue}</p>
       <div className="gauge-bar">
         <div
           className="gauge-fill"
