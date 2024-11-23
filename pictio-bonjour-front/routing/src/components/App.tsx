@@ -59,6 +59,9 @@ function App() {
       .then(() => {
         connectionRef.current!.invoke("JoinGame")
       });
+      connectionRef.current.on("onStatusChanged", (state)=>{
+        SetUserState(state)
+      })
     return () => {
       connectionRef.current?.invoke("LeaveGame")
       console.log("unmounting")
