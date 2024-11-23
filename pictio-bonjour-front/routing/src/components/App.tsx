@@ -5,10 +5,9 @@ import PlayButton from "./PlayButton";
 import Painter from "./Painter";
 import Paint from "./Paint";
 import Guesser from "./Guesser";
+import { parse } from "uuid";
 
 enum States {
-  Lobby = "Lobby",
-  Searching = "searching",
   Ready = "ready",
   Playing = "playing",
   Done = "done",
@@ -20,34 +19,16 @@ export enum UserState {
 }
 
 
-
-
-async function joinGame(connection: HubConnection) {
-  if (!connection) {
-    return
-  }
-  try {
-    await connection.invoke("JoinGame");
-  } catch (error) {
-    console.error(error)
-  }
-}
-
-async function startGame(connection: HubConnection) {
-  if (!connection) {
-    return
-  }
-}
-
-
 function App() {
-  const [currentState, setCurrentState] = useState(States.Lobby);
+  const [currentState, setCurrentState] = useState(States.Ready);
   const [connection, setConnection] = useState<HubConnection | null>(null)
   const [playersNumber, setPlayersNumber] = useState(0)
   const [userState, SetUserState] = useState<UserState | null>(null);
-  const [emojis, setEmojis] = useState("");
+  const [target_emojis, setTargetEmoji] = useState("");
+  const [potential_emojis, setPotentialEmoji] = useState<string[]>([]);
   const connectionRef = useRef<HubConnection | null>(null);
 
+  
   window.onbeforeunload = function () {
     connectionRef.current?.invoke("LeaveGame")
       .then(() => console.log("left"))
@@ -62,49 +43,68 @@ function App() {
       .then(() => {
         connectionRef.current!.invoke("JoinGame")
       });
+      connectionRef.current.on("onStatusChanged", (state)=>{
+        SetUserState(state)
+      })
+
+    connectionRef.current.on("ReceivePotentialEmojis", (data)=>{
+      setPotentialEmoji(data)
+      setCurrentState(States.Playing)
+
+
+    })
+
+    connectionRef.current.on("ReceiveTargetEmojis", (data)=>{
+      setTargetEmoji(data)
+      setCurrentState(States.Playing)
+
+    })
+
 
     connectionRef.current.on("onStatusChanged", (state) => {
       SetUserState(state)
     });
     if (userState !== UserState.Drawer) {
       connectionRef.current.on("onCanvasDrawed", (word) => {
-        setEmojis(word)
+        // setEmojis(word)
       });
+
     }
 
     return () => {
       connectionRef.current?.invoke("LeaveGame")
       console.log("unmounting")
     }
-
   }, [])
 
+
   const play = () => {
+
     connectionRef.current?.invoke("OnGameStarter")
   }
 
   function renderComponent(state: States) {
 
     switch (state) {
-      case States.Lobby:
-        return (
-
-          <>
-            {
-              userState === 0 ? <PlayButton onClick={play} /> : ""
-            }
-          </>
-
-        );
       case States.Ready:
-        return <div>Ready</div>
-      case States.Searching:
-        return <div>Searching...</div>;
+        return (
+          <>
+            <p className="title">less is more</p>
+            <div style={{  }}>
+              {
+                userState === 0 ? <PlayButton onClick={play} /> : ""
+              }
+            </div>
+          </>
+        );
       case States.Playing:
 
         return <>
           {
-            <Paint connection={connectionRef.current!} userState={userState!} />
+
+            <div className="container" style={{display: 'flex', flexDirection: 'row'}}>
+              <Paint connection={connectionRef.current!} userState={userState!} />
+            </div>
           }
 
         </>
@@ -117,16 +117,8 @@ function App() {
 
 
   return (
-    <div className="container" style={{display: 'flex', flexDirection: 'row'}}>
-      <div >
-        <p>{JSON.stringify(userState)}</p>
-        <p>{connectionRef.current?"connected":"not connected"}</p>
-      </div>
-      {
-        connectionRef.current && userState!==null && <Paint connection={connectionRef.current!} userState={userState!} />
-      }
-      <p>{currentState}|{playersNumber}|{userState}</p>
-      {/* {renderComponent(currentState)} */}
+    <div className="container" style={{ display: 'flex', flexDirection: 'row' }}>
+      {renderComponent(currentState)}
     </div>
   );
 

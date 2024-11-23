@@ -6,3 +6,6 @@ bin/
 .vs/
 bin/
 test/
+
+
+.DS_Store
