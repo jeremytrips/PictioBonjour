@@ -106,7 +106,7 @@ function App() {
       {userState === UserState.Player && potential_emojis && (
         <div
         
-        className="emoji-container"
+        className="container emoji-container"
           style={{
             display: "flex",
             gap: "10px",
