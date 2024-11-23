@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import { HubConnection, HubConnectionBuilder, LogLevel } from '@microsoft/signalr'
+import { HubConnection, HubConnectionBuilder, HubConnectionState, LogLevel } from '@microsoft/signalr'
 import "./App.css";
 import PlayButton from "./PlayButton";
+import Painter from "./Painter";
 import Paint from "./Paint";
 import Guesser from "./Guesser";
+
 enum States {
   Ready = "ready",
   Playing = "playing",
@@ -15,71 +17,75 @@ enum UserState {
   Player
 }
 
+
+
+
+async function joinGame(connection: HubConnection) {
+  if (!connection) {
+    return
+  }
+  try {
+    await connection.invoke("JoinGame");
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+async function startGame(connection: HubConnection) {
+  if (!connection) {
+    return
+  }
+}
+
+
 function App() {
   const [currentState, setCurrentState] = useState(States.Ready);
   const [playersNumber, setPlayersNumber] = useState(0)
   const [userState, SetUserState] = useState<UserState | null>(null);
-  const [emojis,setEmojis] = useState("")
+  const [emojis, setEmojis] = useState("");
+  const connectionRef = useRef<HubConnection | null>(null);
 
-
-  async function play() {
-    if (!connection) {
-      return
-    }
-    setCurrentState(States.Playing)
+  window.onbeforeunload = function () {
+    connectionRef.current?.invoke("LeaveGame")
+      .then(() => console.log("left"))
   }
-
-  onbeforeunload = (e: BeforeUnloadEvent) => {
-    if (connection) {
-      try {
-        connection.invoke("LeaveGame");
-      }
-      catch (error) {
-        console.error(error)
-      }
-      finally {
-        connection.stop();
-      }
-    }
-  }
-  window.addEventListener('beforeunload', onbeforeunload);
-
 
   useEffect(() => {
-    connection.on("onStatusChanged", (data) => {
-      SetUserState(data)
-      console.log("status changed", data);
-    });
-
-    connection.on("onPlayerListUpdated", (data) => {
-      setPlayersNumber(data)
-    });
-
-
-
-    connection.on("onGameStopped", () => {
-    });
+    console.log("mounting")
+    connectionRef.current = new HubConnectionBuilder()
+      .withUrl("http://localhost:5095/hub/game")
+      .build();
+    connectionRef.current.start()
+      .then(() => {
+        connectionRef.current!.invoke("JoinGame")
+      });
+    return () => {
+      connectionRef.current?.invoke("LeaveGame")
+      console.log("unmounting")
+    }
   }, [])
 
-
+  const play = () => {
+    connectionRef.current?.invoke("StartGame")
+  }
 
   function renderComponent(state: States) {
 
     switch (state) {
       case States.Ready:
         return (
-          <> 
-          {
-            userState === 0 ? <PlayButton onClick={play}/>: ""
-          }
+          <>
+            {
+              userState === 0 ? <PlayButton onClick={play} /> : ""
+            }
           </>
         );
       case States.Playing:
         return <>
           {
-             userState === 0 ? <Paint/> : <Guesser/>
+            userState === 0 ? <Paint /> : <Guesser />
           }
-          
+
         </>
 
       default:
@@ -87,9 +93,12 @@ function App() {
     }
   };
 
-  return <div className="container">
-    {renderComponent(currentState)}
-  </div>;
+  return (
+    <div className="container">
+      <p>{currentState}|{playersNumber}|{userState}</p>
+      {renderComponent(currentState)}
+    </div>
+  );
 }
 
 export default App;

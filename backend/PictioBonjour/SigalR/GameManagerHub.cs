@@ -26,6 +26,8 @@ public class GameManagerHub : Hub
         var playerType = _gameManagerService.JoinGame(Context.ConnectionId);
         await Clients.Caller.SendAsync(StatusChanged, playerType);
         await Clients.All.SendAsync(PlayerListUpdated, _gameManagerService.AmountOfPlayers);
+        Console.WriteLine("Player joined");
+        Console.WriteLine(_gameManagerService.AmountOfPlayers + " players in game");
     }
     public async Task OnGameStarter()
     {
@@ -39,12 +41,12 @@ public class GameManagerHub : Hub
             throw new InvalidOperationException("Not the drawer");
         }
 
-// Générer les emojis
+// Gï¿½nï¿½rer les emojis
         var targetEmojis = _gameManagerService.emojieGenerator.GenerateTargetEmoji();
         var potentialEmojis = _gameManagerService.emojieGenerator.GeneratePotentialEmoji();
 
         // Envoyer les emojis aux joueurs
-        await Clients.Caller.SendAsync("ReceiveTargetEmojis", targetEmojis); // Drawer reçoit les cibles
+        await Clients.Caller.SendAsync("ReceiveTargetEmojis", targetEmojis); // Drawer reï¿½oit les cibles
         await Clients.Others.SendAsync("ReceivePotentialEmojis", potentialEmojis);
 
 
@@ -61,11 +63,16 @@ public class GameManagerHub : Hub
             var userId = _gameManagerService.GetRandomAndAssignPlayer();
             if (userId is not null)
                 await Clients.Client(userId).SendAsync(StatusChanged, EPlayerType.Drawer);
+            else{
+                _gameManagerService.ResetGame();
+            }
         }
         else
         {
             _gameManagerService.LeaveGame(Context.ConnectionId);
         }
+        Console.WriteLine("Player left");
+        Console.WriteLine(_gameManagerService.AmountOfPlayers + " players in game");
         await Clients.All.SendAsync(PlayerListUpdated, _gameManagerService.AmountOfPlayers);
     }
         
