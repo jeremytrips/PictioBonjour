@@ -30,15 +30,25 @@ const Paint = (props: { userState: UserState, connection: HubConnection }) => {
   const [scribbles, setScribbles] = useState<Scribble[]>([]);
   const [, setSelectedId] = useState<string | null>(null);
   const [dataframeSize, setDataframeSize] = useState(0);
-
+  const dataframeSizeRef = useRef(0);
   const isPainting = useRef(false);
   const stageRef = useRef<Konva.Stage>(null);
   const transformerRef = useRef<Konva.Transformer>(null);
 
+
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      console.log("in")
+      console.log(dataframeSizeRef.current);
+      setDataframeSize(dataframeSizeRef.current)
+    }, 100);
+    () => clearInterval(intervalId);
+  }, [])
+
+
   useEffect(() => {
     props.connection.on("OnDrawEvent", (data) => {
-      console.log(data);
-      console.log("inn")
+      dataframeSizeRef.current = (data as string).length
       Konva.Node.create(JSON.parse(data), stageRef.current!.container());
     });
     return () => {
@@ -60,6 +70,8 @@ const Paint = (props: { userState: UserState, connection: HubConnection }) => {
 
   // Clear all scribbles
   const onClearClick = useCallback(() => {
+    setDataframeSize(0);
+    dataframeSizeRef.current = 0;
     setScribbles([]);
     setSelectedId(null);
     if (transformerRef.current) transformerRef.current.nodes([]);
@@ -92,7 +104,8 @@ const Paint = (props: { userState: UserState, connection: HubConnection }) => {
   const handleSendDrawEvent = async () => {
     const stage = stageRef.current;
     const pos = stage!.toJSON();
-    if (pos) {
+    if (pos && dataframeSizeRef.current <30_000) {
+      dataframeSizeRef.current = pos.length;
       props.connection.invoke("DrawEvent", pos);
     }
   }
@@ -101,6 +114,9 @@ const Paint = (props: { userState: UserState, connection: HubConnection }) => {
   const onStageMouseMove = useCallback(() => {
     if (!isPainting.current || drawAction !== DrawAction.Scribble)
       return;
+    const length = stageRef.current!.toJSON().length;
+    if (length && dataframeSizeRef.current > 30_000) 
+      return
 
     if (props.userState === UserState.Drawer) {
       handleSendDrawEvent();
@@ -148,7 +164,7 @@ const Paint = (props: { userState: UserState, connection: HubConnection }) => {
 
   return (
     <div>
-      <p>{Math.floor(dataframeSize/30_000)} %</p>
+      <p>{Math.round(100-(dataframeSize / 30_000)*100)}</p>
 
       {props.userState === UserState.Drawer ?
         <div style={{ display: "flex", gap: "10px", marginBottom: "10px" }}>
