@@ -46,23 +46,19 @@ function App() {
         SetUserState(state)
       })
 
-      connectionRef.current.on("ReceivePotentialEmojis", (data)=>{
-        console.log(data);
-        console.log(currentState);
-        //setPotentialEmoji(data)
-        setCurrentState(states.Playing)
-        
-        
-      })
+    connectionRef.current.on("ReceivePotentialEmojis", (data)=>{
+      setPotentialEmoji(data)
+      setCurrentState(States.Playing)
 
-      connectionRef.current.on("ReceiveTargetEmojis", (data)=>{
-        console.log(data);
-        console.log(currentState);
-        //setTargetEmoji(data)
-        setCurrentState(states.Playing)
-     
-      })
-        
+
+    })
+
+    connectionRef.current.on("ReceiveTargetEmojis", (data)=>{
+      setTargetEmoji(data)
+      setCurrentState(States.Playing)
+
+    })
+
 
     connectionRef.current.on("onStatusChanged", (state) => {
       SetUserState(state)
@@ -71,7 +67,7 @@ function App() {
       connectionRef.current.on("onCanvasDrawed", (word) => {
         // setEmojis(word)
       });
-      
+
     }
 
     return () => {
@@ -82,7 +78,7 @@ function App() {
 
 
   const play = () => {
-    
+
     connectionRef.current?.invoke("OnGameStarter")
   }
 
@@ -101,20 +97,13 @@ function App() {
           </>
         );
       case States.Playing:
-        
+
         return <>
           {
-           
+
             <div className="container" style={{display: 'flex', flexDirection: 'row'}}>
-        <div >
-          <p>{JSON.stringify(userState)}</p>
-          <p>{connectionRef.current?"connected":"not connected"}</p>
-        </div>
-        {
-          connectionRef.current && userState!==null && <Paint connection={connectionRef.current!} userState={userState!} />
-        }
-        <p>{currentState}|{playersNumber}|{userState}</p>
-      </div>
+              <Paint connection={connectionRef.current!} userState={userState!} />
+            </div>
           }
 
         </>
