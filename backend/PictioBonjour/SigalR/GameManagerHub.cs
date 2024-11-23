@@ -1,4 +1,5 @@
 
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using Microsoft.AspNetCore.SignalR;
 using PictioBonjour.models;
 using PictioBonjour.services;
@@ -10,7 +11,7 @@ public class GameManagerHub : Hub
     const string StatusChanged = "onStatusChanged";
     const string PlayerListUpdated = "onplayerListUpdated";
     const string GameStopped = "onGameStopped";
-    const string DrawEvent = "onDrawEvent";
+    const string DrawEventResp = "onDrawEvent";
     const string ResetGame = "onResetGame";
 
     private readonly GameManagerService _gameManagerService;
@@ -31,7 +32,7 @@ public class GameManagerHub : Hub
     }
     public async Task OnGameStarter()
     {
-        if (_gameManagerService.emojieGenerator == null)
+        if (_gameManagerService.EmojieGenerator == null)
         {
             throw new InvalidOperationException("EmojiGeneratorService is not initialized.");
         }
@@ -42,16 +43,12 @@ public class GameManagerHub : Hub
         }
 
 // G�n�rer les emojis
-        var targetEmojis = _gameManagerService.emojieGenerator.GenerateTargetEmoji();
-        var potentialEmojis = _gameManagerService.emojieGenerator.GeneratePotentialEmoji();
+        var targetEmojis = _gameManagerService.EmojieGenerator.GenerateTargetEmoji();
+        var potentialEmojis = _gameManagerService.EmojieGenerator.GeneratePotentialEmoji();
 
         // Envoyer les emojis aux joueurs
         await Clients.Caller.SendAsync("ReceiveTargetEmojis", targetEmojis); // Drawer re�oit les cibles
         await Clients.Others.SendAsync("ReceivePotentialEmojis", potentialEmojis);
-
-        
-
-
     }
 
     public async Task LeaveGame()
@@ -73,13 +70,14 @@ public class GameManagerHub : Hub
         }
         Console.WriteLine("Player left");
         Console.WriteLine(_gameManagerService.AmountOfPlayers + " players in game");
-        await Clients.All.SendAsync(PlayerListUpdated, _gameManagerService.AmountOfPlayers);
+        await Clients.Others.SendAsync(PlayerListUpdated, _gameManagerService.AmountOfPlayers);
     }
         
 
-    public void OnDrawEvent(byte[] canvas)
+    public void DrawEvent(string canvas)
     {
-        Clients.All.SendAsync(DrawEvent, canvas);
+        Console.WriteLine(canvas.Length);
+        Clients.Others.SendAsync(DrawEventResp, canvas);
     }
 
     public void OnResetGame(){

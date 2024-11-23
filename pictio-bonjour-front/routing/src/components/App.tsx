@@ -14,7 +14,7 @@ enum States {
   Done = "done",
 }
 
-enum UserState {
+export enum UserState {
   Drawer,
   Player
 }
@@ -54,27 +54,33 @@ function App() {
   }
 
   useEffect(() => {
-    console.log("mounting")
     connectionRef.current = new HubConnectionBuilder()
       .withUrl("http://localhost:5095/hub/game")
       .build();
+
     connectionRef.current.start()
       .then(() => {
         connectionRef.current!.invoke("JoinGame")
       });
-      connectionRef.current.on("onStatusChanged", (state)=>{
-        SetUserState(state)
-      })
-     
+
+    connectionRef.current.on("onStatusChanged", (state) => {
+      SetUserState(state)
+    });
+    if (userState !== UserState.Drawer) {
+      connectionRef.current.on("onCanvasDrawed", (word) => {
+        setEmojis(word)
+      });
+    }
 
     return () => {
       connectionRef.current?.invoke("LeaveGame")
       console.log("unmounting")
     }
+
   }, [])
 
   const play = () => {
-    connectionRef.current?.invoke("StartGame")
+    connectionRef.current?.invoke("OnGameStarter")
   }
 
   function renderComponent(state: States) {
@@ -98,7 +104,7 @@ function App() {
 
         return <>
           {
-            userState === 0 ? <Paint /> : <Guesser />
+            <Paint connection={connectionRef.current!} userState={userState!} />
           }
 
         </>
@@ -111,9 +117,16 @@ function App() {
 
 
   return (
-    <div className="container">
+    <div className="container" style={{display: 'flex', flexDirection: 'row'}}>
+      <div >
+        <p>{JSON.stringify(userState)}</p>
+        <p>{connectionRef.current?"connected":"not connected"}</p>
+      </div>
+      {
+        connectionRef.current && userState!==null && <Paint connection={connectionRef.current!} userState={userState!} />
+      }
       <p>{currentState}|{playersNumber}|{userState}</p>
-      {renderComponent(currentState)}
+      {/* {renderComponent(currentState)} */}
     </div>
   );
 

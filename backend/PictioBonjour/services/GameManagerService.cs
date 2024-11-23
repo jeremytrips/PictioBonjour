@@ -6,10 +6,10 @@ public class GameManagerService
 {
 
     private Game? _game;   
-    public  EmojieGeneratorService emojieGenerator { get; set; }
+    public  EmojieGeneratorService EmojieGenerator { get; set; }
     public GameManagerService(EmojieGeneratorService emojieGenerator)
     {
-        emojieGenerator = emojieGenerator ?? throw new ArgumentNullException(nameof(emojieGenerator));
+        EmojieGenerator = emojieGenerator ?? throw new ArgumentNullException(nameof(emojieGenerator));
     }
   
     
