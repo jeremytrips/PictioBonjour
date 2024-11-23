@@ -43,13 +43,13 @@ public class GameManagerService
         {
             throw new Exception("No game is running");
         }
-        if (_game.Players.Count == 0)
-        {
-            _game = null;
-            return null;
-        }
         else
         {
+            if(_game.Players.Count == 0){
+                ResetGame();
+                return null;
+            }
+                
             var random = new Random();
             var randomIndex = random.Next(0, _game.Players.Count);
             var newDrawer = _game.Players[randomIndex];
@@ -78,11 +78,13 @@ public class GameManagerService
 
     public void LeaveGame(string connectionId)
     {
+        var a = new List<int>(){1,2,3};
         if (_game is null)
         {
             return;
         }
-        _game.Players.Remove(connectionId);
+        if(!_game.Players.Remove(connectionId))
+            throw new Exception("Player not found");
     }
 
     public void ResetGame()

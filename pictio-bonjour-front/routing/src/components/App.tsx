@@ -1,7 +1,10 @@
-import { useEffect, useState } from "react";
-import { HubConnection, HubConnectionBuilder, LogLevel } from '@microsoft/signalr'
+import { useEffect, useRef, useState } from "react";
+import { HubConnection, HubConnectionBuilder, HubConnectionState, LogLevel } from '@microsoft/signalr'
 import "./App.css";
 import PlayButton from "./PlayButton";
+import Painter from "./Painter";
+import Paint from "./Paint";
+import Guesser from "./Guesser";
 
 enum States {
   Lobby = "Lobby",
@@ -16,105 +19,102 @@ enum UserState {
   Player
 }
 
+
+
+
+async function joinGame(connection: HubConnection) {
+  if (!connection) {
+    return
+  }
+  try {
+    await connection.invoke("JoinGame");
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+async function startGame(connection: HubConnection) {
+  if (!connection) {
+    return
+  }
+}
+
+
 function App() {
   const [currentState, setCurrentState] = useState(States.Lobby);
   const [connection, setConnection] = useState<HubConnection | null>(null)
   const [playersNumber, setPlayersNumber] = useState(0)
   const [userState, SetUserState] = useState<UserState | null>(null);
+  const [emojis, setEmojis] = useState("");
+  const connectionRef = useRef<HubConnection | null>(null);
 
-  async function joinGame() {
-    if (!connection) {
-      return
-    }
-
-    setCurrentState(States.Searching)
-    try {
-      await connection.invoke("JoinGame");
-    } catch (error) {
-      console.error(error)
-    }
+  window.onbeforeunload = function () {
+    connectionRef.current?.invoke("LeaveGame")
+      .then(() => console.log("left"))
   }
-
-  onbeforeunload = (e: BeforeUnloadEvent) => {
-    if (connection) {
-      try {
-        connection.invoke("LeaveGame");
-      }
-      catch (error) {
-        console.error(error)
-      }
-      finally {
-        connection.stop();
-      }
-    }
-  }
-  window.addEventListener('beforeunload', onbeforeunload);
-
 
   useEffect(() => {
-
-    const connection = new HubConnectionBuilder()
+    console.log("mounting")
+    connectionRef.current = new HubConnectionBuilder()
       .withUrl("http://localhost:5095/hub/game")
-      .withAutomaticReconnect()
-      .configureLogging(LogLevel.Information)
       .build();
-
-    setConnection(connection)
-
-    connection.start()
+    connectionRef.current.start()
       .then(() => {
-        console.log("connected")
-      })
-      .catch((error) => {
-        console.error(error)
+        connectionRef.current!.invoke("JoinGame")
       });
-
-    connection.on("onStatusChanged", (data) => {
-      setCurrentState(States.Ready)
-      SetUserState(data)
-      console.log("status changed", data);
-    });
-
-    connection.on("onPlayerListUpdated", (data) => {
-      console.log("playerListUpdated", data)
-      setPlayersNumber(data)
-    });
-
-    connection.on("onGameStopped", () => {
-
-    });
-
+      connectionRef.current.on("onStatusChanged", (state)=>{
+        SetUserState(state)
+      })
+    return () => {
+      connectionRef.current?.invoke("LeaveGame")
+      console.log("unmounting")
+    }
   }, [])
 
-
+  const play = () => {
+    connectionRef.current?.invoke("StartGame")
+  }
 
   function renderComponent(state: States) {
 
     switch (state) {
       case States.Lobby:
         return (
-          <PlayButton onClick={joinGame} />
+
+          <>
+            {
+              userState === 0 ? <PlayButton onClick={play} /> : ""
+            }
+          </>
+
         );
       case States.Ready:
         return <div>Ready</div>
       case States.Searching:
         return <div>Searching...</div>;
       case States.Playing:
-        return <div>There should be a canvas here</div>;
-      case States.Done:
-        return <div>Done</div>;
+
+        return <>
+          {
+            userState === 0 ? <Paint /> : <Guesser />
+          }
+
+        </>
+
+
       default:
         return null;
     }
   };
 
-  return <div className="container">
-    <div>
-      <h1>Players: {playersNumber}</h1>
-      {userState !== null && <h2>{userState === UserState.Drawer ? "You are the drawer" : "You are a player"}</h2>}
+
+  return (
+    <div className="container">
+      <p>{currentState}|{playersNumber}|{userState}</p>
+      {renderComponent(currentState)}
     </div>
-    {renderComponent(currentState)}
-  </div>;
+  );
+
 }
 
 export default App;
