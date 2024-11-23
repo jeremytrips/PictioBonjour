@@ -27,6 +27,7 @@ function App() {
   const [potential_emojis, setPotentialEmoji] = useState<string[]>([]);
   const connectionRef = useRef<HubConnection | null>(null);
 
+  
   window.onbeforeunload = function () {
     connectionRef.current?.invoke("LeaveGame")
       .then(() => console.log("left"))
@@ -65,14 +66,15 @@ function App() {
       connectionRef.current.on("onCanvasDrawed", (word) => {
         setEmojis(word)
       });
+      
     }
 
     return () => {
       connectionRef.current?.invoke("LeaveGame")
       console.log("unmounting")
     }
-
   }, [])
+
 
   const play = () => {
     connectionRef.current?.invoke("OnGameStarter")
