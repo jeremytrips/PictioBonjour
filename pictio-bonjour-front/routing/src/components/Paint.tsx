@@ -1,12 +1,14 @@
-import  { useRef, useState, useCallback } from "react";
+import { useRef, useState, useCallback, useEffect } from "react";
 import { Stage, Layer, Rect as KonvaRect, Transformer } from "react-konva";
 import { Line as KonvaLine } from "react-konva";
-import { KonvaEventObject } from "konva/lib/Node";
+import { KonvaEventObject, Node } from "konva/lib/Node";
 import ExportIcon from "../assets/images.png";
 import ScribbleIcon from "../assets/scribble.png";
 import OnclearIcon from "../assets/onclear.png";
 import SelectIcon from "../assets/select.jpg";
 import Konva from "konva";
+import { UserState } from "./App";
+import { HubConnection } from "@microsoft/signalr";
 
 const CANVAS_SIZE = 500;
 
@@ -22,15 +24,38 @@ interface Scribble {
   color: string;
 }
 
-const Paint = () => {
+const Paint = (props: { userState: UserState, connection: HubConnection }) => {
   const [color, setColor] = useState("#000");
   const [drawAction, setDrawAction] = useState<DrawAction>(DrawAction.Select);
   const [scribbles, setScribbles] = useState<Scribble[]>([]);
   const [, setSelectedId] = useState<string | null>(null);
-
+  const [dataframeSize, setDataframeSize] = useState(0);
+  const dataframeSizeRef = useRef(0);
   const isPainting = useRef(false);
   const stageRef = useRef<Konva.Stage>(null);
   const transformerRef = useRef<Konva.Transformer>(null);
+
+
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      console.log("in")
+      console.log(dataframeSizeRef.current);
+      setDataframeSize(dataframeSizeRef.current)
+    }, 100);
+    () => clearInterval(intervalId);
+  }, [])
+
+
+  useEffect(() => {
+    props.connection.on("OnDrawEvent", (data) => {
+      dataframeSizeRef.current = (data as string).length
+      Konva.Node.create(JSON.parse(data), stageRef.current!.container());
+    });
+    return () => {
+
+    }
+  }, [props.connection, props.userState])
+
 
   // Export canvas to image
   const onExportClick = useCallback(() => {
@@ -45,6 +70,8 @@ const Paint = () => {
 
   // Clear all scribbles
   const onClearClick = useCallback(() => {
+    setDataframeSize(0);
+    dataframeSizeRef.current = 0;
     setScribbles([]);
     setSelectedId(null);
     if (transformerRef.current) transformerRef.current.nodes([]);
@@ -73,9 +100,27 @@ const Paint = () => {
     isPainting.current = false;
   }, []);
 
+
+  const handleSendDrawEvent = async () => {
+    const stage = stageRef.current;
+    const pos = stage!.toJSON();
+    if (pos && dataframeSizeRef.current <30_000) {
+      dataframeSizeRef.current = pos.length;
+      props.connection.invoke("DrawEvent", pos);
+    }
+  }
+
   // Continue drawing
   const onStageMouseMove = useCallback(() => {
-    if (!isPainting.current || drawAction !== DrawAction.Scribble) return;
+    if (!isPainting.current || drawAction !== DrawAction.Scribble)
+      return;
+    const length = stageRef.current!.toJSON().length;
+    if (length && dataframeSizeRef.current > 30_000) 
+      return
+
+    if (props.userState === UserState.Drawer) {
+      handleSendDrawEvent();
+    }
 
     const stage = stageRef.current;
     const pos = stage?.getPointerPosition();
@@ -89,6 +134,8 @@ const Paint = () => {
       );
     }
   }, [drawAction]);
+
+
 
   // Handle scribble selection
   const onShapeClick = useCallback(
@@ -117,38 +164,41 @@ const Paint = () => {
 
   return (
     <div>
-      {/* Toolbar */}
-      <div style={{ display: "flex", gap: "10px", marginBottom: "10px" }}>
-        <button onClick={() => setDrawAction(DrawAction.Select)}>
-          <img src={SelectIcon} alt="Select" style={{ width: 30, height: 30 }} />
-        </button>
-        <button onClick={() => setDrawAction(DrawAction.Scribble)}>
-          <img
-            src={ScribbleIcon}
-            alt="Scribble"
-            style={{ width: 30, height: 30 }}
+      <p>{Math.round(100-(dataframeSize / 30_000)*100)}</p>
+
+      {props.userState === UserState.Drawer ?
+        <div style={{ display: "flex", gap: "10px", marginBottom: "10px" }}>
+          <button onClick={() => setDrawAction(DrawAction.Select)}>
+            <img src={SelectIcon} alt="Select" style={{ width: 30, height: 30 }} />
+          </button>
+          <button onClick={() => setDrawAction(DrawAction.Scribble)}>
+            <img
+              src={ScribbleIcon}
+              alt="Scribble"
+              style={{ width: 30, height: 30 }}
+            />
+          </button>
+          <button onClick={onClearClick}>
+            <img
+              src={OnclearIcon}
+              alt="Clear"
+              style={{ width: 30, height: 30 }}
+            />
+          </button>
+          <button onClick={onExportClick}>
+            <img
+              src={ExportIcon}
+              alt="Export"
+              style={{ width: 30, height: 30 }}
+            />
+          </button>
+          <input
+            type="color"
+            value={color}
+            onChange={(e) => setColor(e.target.value)}
           />
-        </button>
-        <button onClick={onClearClick}>
-          <img
-            src={OnclearIcon}
-            alt="Clear"
-            style={{ width: 30, height: 30 }}
-          />
-        </button>
-        <button onClick={onExportClick}>
-          <img
-            src={ExportIcon}
-            alt="Export"
-            style={{ width: 30, height: 30 }}
-          />
-        </button>
-        <input
-          type="color"
-          value={color}
-          onChange={(e) => setColor(e.target.value)}
-        />
-      </div>
+        </div>
+        : null}
 
       {/* Canvas */}
       <Stage
