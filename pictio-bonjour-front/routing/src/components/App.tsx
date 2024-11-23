@@ -2,10 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { HubConnection, HubConnectionBuilder, LogLevel } from '@microsoft/signalr'
 import "./App.css";
 import PlayButton from "./PlayButton";
-import Painter from "./Painter";
 import Paint from "./Paint";
 import Guesser from "./Guesser";
-
 enum States {
   Ready = "ready",
   Playing = "playing",
@@ -16,43 +14,6 @@ enum UserState {
   Drawer,
   Player
 }
-
-
-
-const connection = new HubConnectionBuilder()
-.withUrl("http://localhost:5095/hub/game")
-.withAutomaticReconnect()
-.configureLogging(LogLevel.Information)
-.build();
-
-
-async function joinGame() {
-  if (!connection) {
-    return
-  }
-  try {
-    await connection.invoke("JoinGame");
-    console.log("joined");
-    
-  } catch (error) {
-    console.error(error)
-  }
-}
-
-async function startGame() {
-  if (!connection) {
-    return
-  }
-}
-
-
-connection.start()
-.then(() => {
-  joinGame()
-})
-.catch((error) => {
-  console.error(error)
-});
 
 function App() {
   const [currentState, setCurrentState] = useState(States.Ready);
@@ -87,12 +48,14 @@ function App() {
   useEffect(() => {
     connection.on("onStatusChanged", (data) => {
       SetUserState(data)
-
+      console.log("status changed", data);
     });
 
     connection.on("onPlayerListUpdated", (data) => {
       setPlayersNumber(data)
     });
+
+
 
     connection.on("onGameStopped", () => {
     });
