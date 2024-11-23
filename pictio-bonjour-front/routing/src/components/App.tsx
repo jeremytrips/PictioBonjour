@@ -69,7 +69,7 @@ function App() {
     });
     if (userState !== UserState.Drawer) {
       connectionRef.current.on("onCanvasDrawed", (word) => {
-        setEmojis(word)
+        // setEmojis(word)
       });
       
     }
@@ -92,11 +92,13 @@ function App() {
       case States.Ready:
         return (
           <>
-            {
-              userState === 0 ? <PlayButton onClick={play} /> : ""
-            }
+            <p className="title">less is more</p>
+            <div style={{  }}>
+              {
+                userState === 0 ? <PlayButton onClick={play} /> : ""
+              }
+            </div>
           </>
-
         );
       case States.Playing:
         
@@ -125,7 +127,7 @@ function App() {
 
 
   return (
-    <div className="container">
+    <div className="container" style={{ display: 'flex', flexDirection: 'row' }}>
       {renderComponent(currentState)}
     </div>
   );

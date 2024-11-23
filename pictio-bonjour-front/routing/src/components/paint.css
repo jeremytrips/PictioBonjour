@@ -1,0 +1,42 @@
+.actionButton{
+    padding: 10px;
+}
+
+.actionButton:hover{
+    transform: scale(1.2);
+    transition: transform 0.1s ease-in-out;
+}
+
+.colorsPallete{
+    display: flex;
+    margin: 20px 0;
+    gap: 10px;
+    flex: 3;
+}
+
+.colorDiv{
+    height: 20px;
+    width: 20px;
+}
+.colorDiv:hover{
+    transform: scale(1.2);
+    transition: transform 0.1s ease-in-out;
+}
+
+.painterheader{
+    display: flex;
+    gap: 5px;
+    margin: 20px 0;
+    background-color: white;
+    padding: 15px;
+    border-radius: 15px;
+    justify-content: space-around;
+}
+
+.actionContainer{
+    display: flex;
+    gap: 10px;
+    flex: 1;
+    justify-content: center;
+    align-items: center;
+}
