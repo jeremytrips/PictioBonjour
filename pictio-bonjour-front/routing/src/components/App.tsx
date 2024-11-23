@@ -115,7 +115,7 @@ function App() {
           }}
         >
           {potential_emojis.map((emoji, index) => (
-            <div  key={index} style={{ fontSize: "2em", margin: "0" }}>
+            <div  key={index} style={{ fontSize: "5em", margin: "0" }}>
               {String.fromCodePoint(parseInt(emoji.split("U+")[1], 16))}
             </div>
           ))}
