@@ -1,0 +1,8 @@
+node_modules/
+.vs/
+obj/
+bin/obj/
+bin/
+.vs/
+bin/
+test/
