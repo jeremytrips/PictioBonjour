@@ -6,6 +6,7 @@ public class GameManagerService
 {
 
     private Game? _game;   
+    
     public  EmojieGeneratorService EmojieGenerator { get; set; }
     public GameManagerService(EmojieGeneratorService emojieGenerator)
     {
@@ -54,6 +55,7 @@ public class GameManagerService
             var randomIndex = random.Next(0, _game.Players.Count);
             var newDrawer = _game.Players[randomIndex];
             _game.CurrentDrawer = newDrawer;
+            Console.WriteLine($"Assigning new drawer: {newDrawer}");
             return newDrawer;
         }
     }
@@ -91,4 +93,7 @@ public class GameManagerService
     {
         _game = null;
     }
+
+    
 }
+

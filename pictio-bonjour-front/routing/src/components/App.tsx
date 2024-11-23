@@ -48,6 +48,7 @@ function App() {
   const [emojis, setEmojis] = useState("");
   const connectionRef = useRef<HubConnection | null>(null);
 
+  
   window.onbeforeunload = function () {
     connectionRef.current?.invoke("LeaveGame")
       .then(() => console.log("left"))
@@ -70,14 +71,15 @@ function App() {
       connectionRef.current.on("onCanvasDrawed", (word) => {
         setEmojis(word)
       });
+      
     }
 
     return () => {
       connectionRef.current?.invoke("LeaveGame")
       console.log("unmounting")
     }
-
   }, [])
+
 
   const play = () => {
     connectionRef.current?.invoke("OnGameStarter")
@@ -117,17 +119,16 @@ function App() {
 
 
   return (
-    <div className="container" style={{display: 'flex', flexDirection: 'row'}}>
-      <div >
+    <><div className="container" style={{ display: 'flex', flexDirection: 'row' }}>
+      <div>
         <p>{JSON.stringify(userState)}</p>
-        <p>{connectionRef.current?"connected":"not connected"}</p>
+        <p>{connectionRef.current ? "connected" : "not connected"}</p>
       </div>
-      {
-        connectionRef.current && userState!==null && <Paint connection={connectionRef.current!} userState={userState!} />
-      }
+      {connectionRef.current && userState !== null && <Paint connection={connectionRef.current!} userState={userState!} />}
       <p>{currentState}|{playersNumber}|{userState}</p>
-      {/* {renderComponent(currentState)} */}
-    </div>
+      
+      </div></>
+
   );
 
 }
