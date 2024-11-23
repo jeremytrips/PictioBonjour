@@ -41,7 +41,8 @@ public class GameManagerHub : Hub
             throw new InvalidOperationException("Not the drawer");
         }
 
-// G�n�rer les emojis
+
+    // G�n�rer les emojis
         var targetEmojis = _gameManagerService.EmojieGenerator.GenerateTargetEmoji();
         var potentialEmojis = _gameManagerService.EmojieGenerator.GeneratePotentialEmoji();
 
