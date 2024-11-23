@@ -11,64 +11,85 @@ enum States {
   Done = "done",
 }
 
+enum UserState {
+  Drawer,
+  Player
+}
+
 function App() {
   const [currentState, setCurrentState] = useState(States.Lobby);
-  const [connection,setConnection] = useState<HubConnection|null>(null)
+  const [connection, setConnection] = useState<HubConnection | null>(null)
   const [playersNumber, setPlayersNumber] = useState(0)
-  
+  const [userState, SetUserState] = useState<UserState | null>(null);
 
-  async function joinGame(){
-    if(!connection){
-      return 
+  async function joinGame() {
+    if (!connection) {
+      return
     }
 
     setCurrentState(States.Searching)
     try {
       await connection.invoke("JoinGame");
     } catch (error) {
-      console.error(error) 
+      console.error(error)
     }
   }
 
-  useEffect(()=>{
+  onbeforeunload = (e: BeforeUnloadEvent) => {
+    if (connection) {
+      try {
+        connection.invoke("LeaveGame");
+      }
+      catch (error) {
+        console.error(error)
+      }
+      finally {
+        connection.stop();
+      }
+    }
+  }
+  window.addEventListener('beforeunload', onbeforeunload);
+
+
+  useEffect(() => {
 
     const connection = new HubConnectionBuilder()
-    .withUrl("http://localhost:5095/hub/game") 
-    .withAutomaticReconnect() 
-    .configureLogging(LogLevel.Information) 
-    .build();
+      .withUrl("http://localhost:5095/hub/game")
+      .withAutomaticReconnect()
+      .configureLogging(LogLevel.Information)
+      .build();
 
     setConnection(connection)
 
     connection.start()
-      .then(()=>{
+      .then(() => {
         console.log("connected")
       })
-      .catch((error)=>{
+      .catch((error) => {
         console.error(error)
-      })
+      });
 
-    connection.on("onStatusChanged",(data)=>{
+    connection.on("onStatusChanged", (data) => {
       setCurrentState(States.Ready)
-      console.log(data);
-    })
+      SetUserState(data)
+      console.log("status changed", data);
+    });
 
-    connection.on("playerListUpdated",(data)=>{
-      console.log("playerListUpdated",data)
+    connection.on("onPlayerListUpdated", (data) => {
+      console.log("playerListUpdated", data)
       setPlayersNumber(data)
-    })
-    return()=>{
-      connection.invoke("OnLeaveGame");
-      // connection.off("onStatusChanged");
-      // connection.off("playerListUpdated");
-      connection.stop();
-    }
-  },[])
+    });
+
+    connection.on("onGameStopped", () => {
+
+    });
+
+  }, [])
 
 
 
-  function renderComponent(state:States) {
-     
+  function renderComponent(state: States) {
+
     switch (state) {
       case States.Lobby:
         return (
@@ -87,7 +108,13 @@ function App() {
     }
   };
 
-  return <div className="container">{renderComponent(currentState)}</div>;
+  return <div className="container">
+    <div>
+      <h1>Players: {playersNumber}</h1>
+      {userState !== null && <h2>{userState === UserState.Drawer ? "You are the drawer" : "You are a player"}</h2>}
+    </div>
+    {renderComponent(currentState)}
+  </div>;
 }
 
 export default App;
