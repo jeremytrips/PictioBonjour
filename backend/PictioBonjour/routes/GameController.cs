@@ -21,7 +21,10 @@ namespace PictioBonjour.routes
         public IActionResult StartGame()
         {
                  return Ok();
+            
         }
+
+
 
         [HttpGet("joinGame/{gameId}/{userName}")]
         public IActionResult JoinGame(string gameId, string userName)

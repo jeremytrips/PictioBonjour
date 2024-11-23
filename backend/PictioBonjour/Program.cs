@@ -22,6 +22,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddControllers();
 builder.Services.AddSingleton<GameManagerService>();
+builder.Services.AddSingleton<EmojieGeneratorService>();
 
 builder.Services.AddSignalR();
 

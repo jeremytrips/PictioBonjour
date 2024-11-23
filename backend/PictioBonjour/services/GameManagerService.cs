@@ -5,8 +5,14 @@ namespace PictioBonjour.services;
 public class GameManagerService
 {
 
-    private Game? _game;
-
+    private Game? _game;   
+    public  EmojieGeneratorService emojieGenerator { get; set; }
+    public GameManagerService(EmojieGeneratorService emojieGenerator)
+    {
+        emojieGenerator = emojieGenerator ?? throw new ArgumentNullException(nameof(emojieGenerator));
+    }
+  
+    
     public int AmountOfPlayers => _game?.Players.Count ?? 0;
     public string? CurrentDrawer => _game?.CurrentDrawer;
 
