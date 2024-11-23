@@ -47,15 +47,20 @@ function App() {
       })
 
       connectionRef.current.on("ReceivePotentialEmojis", (data)=>{
-        setPotentialEmoji(data)
+        console.log(data);
+        console.log(currentState);
+        //setPotentialEmoji(data)
         setCurrentState(states.Playing)
+        
+        
       })
 
       connectionRef.current.on("ReceiveTargetEmojis", (data)=>{
-        setTargetEmoji(data)
         console.log(data);
-        
+        console.log(currentState);
+        //setTargetEmoji(data)
         setCurrentState(states.Playing)
+     
       })
         
 
@@ -77,6 +82,7 @@ function App() {
 
 
   const play = () => {
+    
     connectionRef.current?.invoke("OnGameStarter")
   }
 
@@ -84,7 +90,6 @@ function App() {
 
     switch (state) {
       case States.Ready:
-        console.log("ready");
         return (
           <>
             {
@@ -94,7 +99,6 @@ function App() {
 
         );
       case States.Playing:
-        console.log("playing");
         
         return <>
           {
