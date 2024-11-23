@@ -5,6 +5,7 @@ import PlayButton from "./PlayButton";
 import Painter from "./Painter";
 import Paint from "./Paint";
 import Guesser from "./Guesser";
+import { parse } from "uuid";
 
 enum States {
   Ready = "ready",
