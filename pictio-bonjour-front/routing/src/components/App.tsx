@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { HubConnection, HubConnectionBuilder, LogLevel } from '@microsoft/signalr'
 import "./App.css";
 import PlayButton from "./PlayButton";
+import Paint from "./Paint";
 
 enum States {
   Lobby = "Lobby",
@@ -114,6 +115,7 @@ function App() {
       {userState !== null && <h2>{userState === UserState.Drawer ? "You are the drawer" : "You are a player"}</h2>}
     </div>
     {renderComponent(currentState)}
+    <Paint />
   </div>;
 }
 

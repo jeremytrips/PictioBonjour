@@ -152,8 +152,8 @@ const Paint = () => {
 
       {/* Canvas */}
       <Stage
-        width={window.innerWidth}
-        height={window.innerHeight}
+        width={700}
+        height={700}
         style={{ border: "1px solid black" }}
         ref={stageRef}
         onMouseDown={onStageMouseDown}
