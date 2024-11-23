@@ -8,20 +8,40 @@ namespace PictioBonjour.SigalR;
 public class GameManagerHub: Hub
 {
     private readonly GameManagerService _gameManagerService;
+    private Game? _game;
 
     public GameManagerHub(GameManagerService gameManagerService)
     {
         _gameManagerService = gameManagerService;
+        _game = new Game(){
+            Id = Guid.NewGuid().ToString(),
+            State = EGameSate.waiting,
+            CurrentDrawer = Context.ConnectionId,
+        };
     }
 
-    public void Send(string data)
+    public async Task JoinGame()
     {
-        Clients.All.SendAsync("send", data);
+        if (_game is null)
+        {
+            _game = new Game()
+            {
+                Id = Guid.NewGuid().ToString(),
+                State = EGameSate.waiting,
+                CurrentDrawer = Context.ConnectionId,
+            };
+            await Clients.Caller.SendAsync("onStatusChanged", EPlayerType.Drawer);
+        }else
+        {
+            await Clients.Caller.SendAsync("onStatusChanged", EPlayerType.Player);
+        }
+        await Clients.All.SendAsync("playerListUpdated", _game.Players.Count + 1);
     }
 
-    public void OnDrawEvent(string gameId, byte[] canvas)
+
+    public void OnDrawEvent(byte[] canvas)
     {
-        Clients.Users(_gameManagerService.GetGame(gameId).Players).SendAsync("OnDrawEvent", canvas);
+        Clients.All.SendAsync("OnDrawEvent", canvas);
     }
 }
     

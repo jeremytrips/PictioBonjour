@@ -8,6 +8,10 @@ public class GameManagerService
 {
     private readonly ConcurrentDictionary<string, Game> _games = new();
 
+    public IEnumerable<string> GetGames(){
+        var gameIds = _games.Values.Select(i=>i.Id); 
+        return gameIds;
+    }
     public string CreateGame(string userId){
         var gameId = Guid.NewGuid().ToString();
         var game = new Game(){
