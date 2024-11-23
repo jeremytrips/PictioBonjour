@@ -78,7 +78,6 @@ function App() {
         return <>
           {
             <div className="container" style={{display: 'flex', flexDirection: 'row'}}>
-
               <Paint connection={connectionRef.current!} userState={userState!} />
             </div>
           }
@@ -96,26 +95,20 @@ function App() {
       {userState === UserState.Drawer && (
         <>
           {hexCode && (
-            <div style={{ fontSize: "5em" }}>
-              {String.fromCodePoint(parseInt(hexCode, 16))}
+            <div className="emoji-container">
+              <div className="emo">
+                {String.fromCodePoint(parseInt(hexCode, 16))}
+              </div>
             </div>
+            
           )}
         </>
       )}
       {/* Si l'utilisateur est un Guesser, affiche les emojis potentiels */}
       {userState === UserState.Player && potential_emojis && (
-        <div
-        
-        className="container emoji-container"
-          style={{
-            display: "flex",
-            gap: "10px",
-            flexWrap: "nowrap",
-            justifyContent: "center",
-          }}
-        >
+        <div className="container emoji-container">
           {potential_emojis.map((emoji, index) => (
-            <div  key={index} style={{ fontSize: "2em", margin: "0" }}>
+            <div className="emo" key={index} >
               {String.fromCodePoint(parseInt(emoji.split("U+")[1], 16))}
             </div>
           ))}

@@ -26,8 +26,25 @@ html, body {
   
 }
 
+.emo {
+  font-size: 5rem;
+  cursor: pointer;
+  user-select: node;
+}
+
+.emo:hover {
+  font-size: 5rem;
+  cursor: pointer;
+
+}
+
 .emoji-container {
   flex: 1 0 200px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 40px;
+  user-select: node;
 }
 
 
