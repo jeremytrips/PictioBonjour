@@ -13,11 +13,7 @@ public class GameManagerHub: Hub
     public GameManagerHub(GameManagerService gameManagerService)
     {
         _gameManagerService = gameManagerService;
-        _game = new Game(){
-            Id = Guid.NewGuid().ToString(),
-            State = EGameSate.waiting,
-            CurrentDrawer = Context.ConnectionId,
-        };
+
     }
 
     public async Task JoinGame()
