@@ -15,9 +15,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="Ressource\Emoji.txt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
     <Content Include="Ressource\Emojis.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

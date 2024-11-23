@@ -14,7 +14,7 @@
 
         private void addEmojisToListEmjis()
         {
-            string path = "Ressource\\Emojis.txt";
+            string path = @"Ressource/Emojis.txt";
             try
             {
                 if (File.Exists(path))
