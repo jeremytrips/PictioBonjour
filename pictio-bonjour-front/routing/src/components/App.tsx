@@ -122,6 +122,7 @@ function App() {
       <p>{currentState}|{playersNumber}|{userState}</p>
       {/* {renderComponent(currentState)} */}
     </div>
+    </div>
   );
 
 }
