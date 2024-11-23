@@ -5,6 +5,7 @@ import PlayButton from "./PlayButton";
 import Painter from "./Painter";
 import Paint from "./Paint";
 import Guesser from "./Guesser";
+import { parse } from "uuid";
 
 enum States {
   Ready = "ready",
@@ -48,6 +49,7 @@ function App() {
 
       connectionRef.current.on("ReceivePotentialEmojis", (data)=>{
         setPotentialEmoji(data)
+        console.log(data);
         setCurrentState(states.Playing)
       })
 
@@ -108,7 +110,9 @@ function App() {
           connectionRef.current && userState!==null && <Paint connection={connectionRef.current!} userState={userState!} />
         }
         <p>{currentState}|{playersNumber}|{userState}</p>
+        <p> test</p>
       </div>
+
           }
 
         </>
@@ -118,13 +122,14 @@ function App() {
         return null;
     }
   };
-
-
-  return (
+ 
+  
+   return (
+    
     <div className="container">
       {renderComponent(currentState)}
     </div>
-    </div>
+    
   );
 
 }
