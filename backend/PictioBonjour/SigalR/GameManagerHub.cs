@@ -1,4 +1,5 @@
 
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using Microsoft.AspNetCore.SignalR;
 using PictioBonjour.models;
 using PictioBonjour.services;
@@ -75,7 +76,8 @@ public class GameManagerHub : Hub
 
     public void DrawEvent(string canvas)
     {
-        Clients.All.SendAsync(DrawEventResp, canvas);
+        Console.WriteLine(canvas.Length);
+        Clients.Others.SendAsync(DrawEventResp, canvas);
     }
 
     public void OnResetGame(){
