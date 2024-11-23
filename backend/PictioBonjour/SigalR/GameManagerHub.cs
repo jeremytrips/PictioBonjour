@@ -49,7 +49,7 @@ public class GameManagerHub : Hub
         await Clients.Caller.SendAsync("ReceiveTargetEmojis", targetEmojis); // Drawer re�oit les cibles
         await Clients.Others.SendAsync("ReceivePotentialEmojis", potentialEmojis);
 
-
+        
 
 
     }
