@@ -26,7 +26,16 @@ builder.Services.AddSingleton<EmojieGeneratorService>();
 
 builder.Services.AddSignalR();
 
-
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.WithOrigins("http://localhost:3000") // React app URL
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials(); // Important for SignalR
+    });
+});
 
 var app = builder.Build();
 app.UseCors();
@@ -41,6 +50,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseCors();
 
 
 app.Run();

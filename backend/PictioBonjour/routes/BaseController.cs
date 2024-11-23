@@ -11,6 +11,6 @@ namespace PictioBonjour.routes
         public IActionResult Get()
         {
             return Ok("ok");
-        }
+        }        
     }
 }
