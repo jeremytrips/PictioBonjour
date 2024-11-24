@@ -1,8 +1,7 @@
 import React, { forwardRef } from "react";
 
-interface PlayButtonProps extends React.HTMLAttributes<HTMLDivElement> {}
 
-const PlayButton = forwardRef<HTMLDivElement, PlayButtonProps>((props, ref) => {
+const PlayButton = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>((props, ref) => {
   const { className, ...rest } = props;
 
   return (

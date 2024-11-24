@@ -2,8 +2,6 @@ import { useRef, useState, useCallback, useEffect } from "react";
 import { Stage, Layer, Rect as KonvaRect, Transformer } from "react-konva";
 import { Line as KonvaLine } from "react-konva";
 import { KonvaEventObject } from "konva/lib/Node";
-import ExportIcon from "../assets/images.png";
-import OnclearIcon from "../assets/onclear.png";
 import Konva from "konva";
 import { EPlayerType } from "./App";
 import { HubConnection } from "@microsoft/signalr";
@@ -12,7 +10,6 @@ import "./paint.css"
 
 const CANVAS_SIZE = 500;
 
-// eslint-disable-next-line react-refresh/only-export-components
 export enum DrawAction {
   Select = "select",
   Scribble = "scribble",
@@ -39,7 +36,7 @@ const MAX_VALUE = 10_000;
 
 const Paint = (props: { userState: EPlayerType, connection: HubConnection }) => {
   const [color, setColor] = useState<string>(colors[0]);
-  const [drawAction, setDrawAction] = useState<DrawAction>(DrawAction.Scribble);
+  const [drawAction] = useState<DrawAction>(DrawAction.Scribble);
   const [scribbles, setScribbles] = useState<Scribble[]>([]);
   const [, setSelectedId] = useState<string | null>(null);
   const [dataframeSize, setDataframeSize] = useState(0);
@@ -53,7 +50,9 @@ const Paint = (props: { userState: EPlayerType, connection: HubConnection }) => 
     const intervalId = setInterval(() => {
       setDataframeSize(dataframeSizeRef.current)
     }, 100);
-    () => clearInterval(intervalId);
+    return () => {
+      clearInterval(intervalId);
+    }
   }, [])
 
 
@@ -66,18 +65,6 @@ const Paint = (props: { userState: EPlayerType, connection: HubConnection }) => 
 
     }
   }, [props.connection, props.userState])
-
-
-  // Export canvas to image
-  const onExportClick = useCallback(() => {
-    const uri = stageRef.current?.toDataURL({ pixelRatio: 3 });
-    if (uri) {
-      const link = document.createElement("a");
-      link.download = "drawing.png";
-      link.href = uri;
-      link.click();
-    }
-  }, []);
 
   // Clear all scribbles
   const onClearClick = useCallback(() => {
@@ -220,7 +207,6 @@ const Paint = (props: { userState: EPlayerType, connection: HubConnection }) => 
               />
             </div>
           </div>
-
         </div>
         : null}
 

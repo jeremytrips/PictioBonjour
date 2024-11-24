@@ -66,7 +66,7 @@ public class GameManagerService
             Id = Guid.NewGuid().ToString(),
             State = EGameSate.running,
             CurrentDrawer = connectionId,
-            Potentials =potentials,
+            Potentials = potentials,
             Target = potentials.ElementAt(_randomizer.Next(0, potentials.Count))
         };
     }
