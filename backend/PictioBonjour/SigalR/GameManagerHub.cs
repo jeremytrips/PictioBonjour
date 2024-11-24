@@ -15,13 +15,14 @@ public class GameManagerHub : Hub
     const string ResetGame = "onResetGame";
 
     private readonly GameManagerService _gameManagerService;
+    private readonly List<string> _players = [];
 
     public GameManagerHub(GameManagerService gameManagerService)
     {
         _gameManagerService = gameManagerService;
 
     }
-  
+
     public async Task<object> JoinGame()
     {
         var playerType = _gameManagerService.JoinGame(Context.ConnectionId);
@@ -29,9 +30,10 @@ public class GameManagerHub : Hub
         await Clients.All.SendAsync(PlayerListUpdated, _gameManagerService.AmountOfPlayers);
         Console.WriteLine("Player joined");
         Console.WriteLine(_gameManagerService.AmountOfPlayers + " players in game");
-        return new{
+        return new
+        {
             playerType,
-            potentials=_gameManagerService.Game.Potentials,
+            potentials = _gameManagerService.Game.Potentials,
             state = _gameManagerService.Game.State
         };
     }
@@ -39,7 +41,7 @@ public class GameManagerHub : Hub
     {
         _gameManagerService.Game.State = EGameSate.running;
         _gameManagerService.ResetGame(Context.ConnectionId);
-        await Clients.Caller.SendAsync("ReceiveTargetEmojis", _gameManagerService.Game.Target); 
+        await Clients.Caller.SendAsync("ReceiveTargetEmojis", _gameManagerService.Game.Target);
         await Clients.Others.SendAsync("ReceivePotentialEmojis", _gameManagerService.Game.Potentials);
     }
 
@@ -52,7 +54,8 @@ public class GameManagerHub : Hub
             var userId = _gameManagerService.GetRandomAndAssignPlayer();
             if (userId is not null)
                 await Clients.Client(userId).SendAsync(StatusChanged, EPlayerType.Drawer);
-            else{
+            else
+            {
                 _gameManagerService.ResetGame();
             }
         }
@@ -60,11 +63,16 @@ public class GameManagerHub : Hub
         {
             _gameManagerService.LeaveGame(Context.ConnectionId);
         }
+        if (_gameManagerService.Game.Players.Count == 1)
+        {
+            _gameManagerService.ResetGame();
+            await Clients.Others.SendAsync("GameReset");
+        }
         Console.WriteLine("Player left");
         Console.WriteLine(_gameManagerService.AmountOfPlayers + " players in game");
         await Clients.Others.SendAsync(PlayerListUpdated, _gameManagerService.AmountOfPlayers);
     }
-        
+
 
     public void DrawEvent(string canvas)
     {
@@ -73,12 +81,15 @@ public class GameManagerHub : Hub
     }
     public async Task<bool> SubmitEmoji(string PlayerEmojisChoice)
     {
-        if(_gameManagerService.SubmitEmoji(PlayerEmojisChoice)){
+        if (_gameManagerService.SubmitEmoji(PlayerEmojisChoice))
+        {
             await Clients.Others.SendAsync("GameReset");
             _gameManagerService.ResetGame();
             return true;
-        }else{
-            return false;            
+        }
+        else
+        {
+            return false;
         }
     }
 }
