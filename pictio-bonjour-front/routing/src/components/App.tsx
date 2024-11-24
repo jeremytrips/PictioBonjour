@@ -21,8 +21,34 @@ function App() {
   const [target_emojis, setTargetEmoji] = useState("");
   const [potential_emojis, setPotentialEmoji] = useState<string[]>([]);
   const connectionRef = useRef<HubConnection | null>(null);
-  const hexCode = target_emojis.split("U+")[1]; // Extraire la partie hexadécimale du code
+  const hexCode = target_emojis.split("U+")[1]; 
+  const starRefs = useRef<(HTMLDivElement | null)[]>(new Array(10).fill(null));
 
+  const getRandomPosition = () => {
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+
+    const x = Math.random() < 0.5 ? Math.random() * (viewportWidth / 2) : viewportWidth / 2 + Math.random() * (viewportWidth / 2);
+    const y = Math.random() < 0.5 ? Math.random() * (viewportHeight / 2) : viewportHeight / 2 + Math.random() * (viewportHeight / 2);
+
+    return { x, y };
+  };
+  const getRandomColor = () => {
+    const r = Math.floor(Math.random() * 256); 
+    const g = Math.floor(Math.random() * 256); 
+    const b = Math.floor(Math.random() * 256); 
+    return `rgb(${r}, ${g}, ${b})`; 
+  };
+  useEffect(() => {
+    for (let i = 0; i < starRefs.current.length; i++) {
+      const { x, y } = getRandomPosition();
+      if (starRefs.current[i]) {
+        starRefs.current[i]!.style.left = `${x}px`;
+        starRefs.current[i]!.style.top = `${y}px`;
+        starRefs.current[i]!.style.backgroundColor = getRandomColor();
+      }
+    }
+  }, []);
   window.onbeforeunload = function () {
     connectionRef.current?.invoke("LeaveGame").then(() => console.log("left"));
   };
@@ -40,17 +66,13 @@ function App() {
     });
 
     connectionRef.current.on("ReceivePotentialEmojis", (data)=>{
-      setPotentialEmoji(data)
-      setCurrentState(States.Playing)
-    })
+      setPotentialEmoji(data);
+      setCurrentState(States.Playing);
+    });
 
     connectionRef.current.on("ReceiveTargetEmojis", (data)=>{
-      setTargetEmoji(data)
-      setCurrentState(States.Playing)
-    })
-
-    connectionRef.current.on("onStatusChanged", (state) => {
-      SetUserState(state);
+      setTargetEmoji(data);
+      setCurrentState(States.Playing);
     });
 
     return () => {
@@ -60,7 +82,7 @@ function App() {
   }, []);
 
   const play = () => {
-    connectionRef.current?.invoke("OnGameStarter")
+    connectionRef.current?.invoke("OnGameStarter");
   }
 
   function renderComponent(state: States) {
@@ -72,26 +94,31 @@ function App() {
             <div style={{}}>
               {userState === 0 ? <PlayButton onClick={play} /> : ""}
             </div>
-          </>
+            <div className="user-animations">
+        {starRefs.current.map((_, index) => (
+          <div 
+            key={index} 
+            className="user-animation" 
+            ref={(el) => (starRefs.current[index] = el)} 
+          />
+        ))}
+      </div>          </>
         );
       case States.Playing:
-        return <>
-          {
+        return (
+          <>
             <div className="container" style={{display: 'flex', flexDirection: 'row'}}>
               <Paint connection={connectionRef.current!} userState={userState!} />
             </div>
-          }
-        </>
+          </>
+        );
       default:
         return null;
     }
   }
 
   return (
-    <div
-      className="container emoji"
-      
-    >
+    <div className="container emoji">
       {userState === UserState.Drawer && (
         <>
           {hexCode && (
@@ -100,21 +127,18 @@ function App() {
                 {String.fromCodePoint(parseInt(hexCode, 16))}
               </div>
             </div>
-            
           )}
         </>
       )}
-      {/* Si l'utilisateur est un Guesser, affiche les emojis potentiels */}
       {userState === UserState.Player && potential_emojis && (
         <div className="container emoji-container">
           {potential_emojis.map((emoji, index) => (
-            <div className="emo" key={index} >
+            <div className="emo" key={index}>
               {String.fromCodePoint(parseInt(emoji.split("U+")[1], 16))}
             </div>
           ))}
         </div>
       )}
-
       {renderComponent(currentState)}
     </div>
   );
