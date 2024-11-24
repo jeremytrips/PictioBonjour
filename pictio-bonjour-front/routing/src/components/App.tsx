@@ -116,10 +116,6 @@ function App() {
       setCurrentState(States.Playing)
     })
 
-    connectionRef.current.on("onStatusChanged", (state) => {
-      setUserType(state);
-    });
-
     connectionRef.current.on("GameReset", () => {
       console.log("Recieved a game reset evt.")
       resetState(EPlayerType.Player);
@@ -131,7 +127,6 @@ function App() {
 
     return () => {
       connectionRef.current?.invoke("LeaveGame");
-      console.log("unmounting");
     };
   }, []);
 
@@ -212,7 +207,7 @@ function App() {
     setUserType(playerType);
     setCurrentState(States.Ready);
     setCanSubmit(true);
-    await connectionRef.current!.invoke<EPlayerType>("JoinGame");
+    await connectionRef.current!.invoke<EPlayerType>("CreateGame");
 
   }
 

@@ -9,7 +9,6 @@ public class Game
     public EGameSate State { get; set; }
     public required string CurrentDrawer { get; set; }
     public DateTime StartTime { get; set; }
-    public List<string> Players { get; set; } = [];
     public required string Target { get; set; }
     public required List<string> Potentials  { get; set; }
 
@@ -20,7 +19,6 @@ public class Game
             Id = Guid.NewGuid().ToString(),
             State = EGameSate.waiting,
             CurrentDrawer = currentDrawer,
-            Players = Players,
             Potentials = potentials,
             Target = target
         };

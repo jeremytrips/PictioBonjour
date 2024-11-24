@@ -15,7 +15,6 @@ public class GameManagerHub : Hub
     const string ResetGame = "onResetGame";
 
     private readonly GameManagerService _gameManagerService;
-    private readonly List<string> _players = [];
 
     public GameManagerHub(GameManagerService gameManagerService)
     {
@@ -25,11 +24,13 @@ public class GameManagerHub : Hub
 
     public async Task<object> JoinGame()
     {
+        _gameManagerService.Players.Add(Context.ConnectionId);
+        
         var playerType = _gameManagerService.JoinGame(Context.ConnectionId);
         await Clients.Caller.SendAsync(StatusChanged, playerType);
-        await Clients.All.SendAsync(PlayerListUpdated, _gameManagerService.AmountOfPlayers);
+        await Clients.All.SendAsync(PlayerListUpdated, _gameManagerService.Players.Count);
         Console.WriteLine("Player joined");
-        Console.WriteLine(_gameManagerService.AmountOfPlayers + " players in game");
+        Console.WriteLine(_gameManagerService.Players.Count + " players in game");
         return new
         {
             playerType,
@@ -39,6 +40,7 @@ public class GameManagerHub : Hub
     }
     public async Task OnGameStarter()
     {
+        _gameManagerService.NewGame(Context.ConnectionId);
         _gameManagerService.Game.State = EGameSate.running;
         _gameManagerService.ResetGame(Context.ConnectionId);
         await Clients.Caller.SendAsync("ReceiveTargetEmojis", _gameManagerService.Game.Target);
@@ -49,11 +51,20 @@ public class GameManagerHub : Hub
     {
         if (Context.ConnectionId == _gameManagerService.CurrentDrawer)
         {
-            _gameManagerService.LeaveGame(Context.ConnectionId);
-            await Clients.All.SendAsync(GameStopped);
-            var userId = _gameManagerService.GetRandomAndAssignPlayer();
-            if (userId is not null)
-                await Clients.Client(userId).SendAsync(StatusChanged, EPlayerType.Drawer);
+            _gameManagerService.Players.Remove(Context.ConnectionId);
+            await Clients.All.SendAsync("GameReset");
+            if (_gameManagerService.Players.Count == 0)
+            {
+                _gameManagerService.ResetGame();
+                return;
+            }
+            var random = new Random();
+            var randomIndex = random.Next(0, _gameManagerService.Players.Count);
+            var newDrawer = _gameManagerService.Players[randomIndex];
+            _gameManagerService.Game.CurrentDrawer = newDrawer;
+            Console.WriteLine($"Assigning new drawer: {newDrawer}");
+            if (newDrawer is not null)
+                await Clients.Client(newDrawer).SendAsync(StatusChanged, EPlayerType.Drawer);
             else
             {
                 _gameManagerService.ResetGame();
@@ -61,16 +72,16 @@ public class GameManagerHub : Hub
         }
         else
         {
-            _gameManagerService.LeaveGame(Context.ConnectionId);
+            _gameManagerService.Players.Remove(Context.ConnectionId);
         }
-        if (_gameManagerService.Game.Players.Count == 1)
+        if (_gameManagerService.Players.Count == 1)
         {
             _gameManagerService.ResetGame();
             await Clients.Others.SendAsync("GameReset");
         }
         Console.WriteLine("Player left");
-        Console.WriteLine(_gameManagerService.AmountOfPlayers + " players in game");
-        await Clients.Others.SendAsync(PlayerListUpdated, _gameManagerService.AmountOfPlayers);
+        Console.WriteLine(_gameManagerService.Players.Count + " players in game");
+        await Clients.Others.SendAsync(PlayerListUpdated, _gameManagerService.Players.Count);
     }
 
 
