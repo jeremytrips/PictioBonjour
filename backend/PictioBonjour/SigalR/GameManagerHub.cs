@@ -35,7 +35,8 @@ public class GameManagerHub : Hub
         {
             playerType,
             potentials = _gameManagerService.Game.Potentials,
-            state = _gameManagerService.Game.State
+            state = _gameManagerService.Game.State,
+            playersCount = _gameManagerService.Players.Count
         };
     }
     public async Task OnGameStarter()

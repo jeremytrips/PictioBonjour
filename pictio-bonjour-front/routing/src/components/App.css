@@ -1,9 +1,11 @@
-html, body {
+html,
+body {
   margin: 0;
   padding: 0;
   font-family: 'Roboto', sans-serif;
   background-color: #5ea1f2;
 }
+
 .container {
   height: 100vh;
   width: 100%;
@@ -15,14 +17,14 @@ html, body {
 }
 
 .user-animation {
-position: absolute;
-width: 20px;
-height:20px;
-border-radius: 50%; 
-top:0;
-left:500;
-animation:blink 5s infinite;
-background-color: rgb(236, 198, 12);
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  top: 0px;
+  left: 0px;
+  border-radius: 50%;
+  animation: 5s infinite;
+  background-color: rgb(236, 198, 12);
 
 }
 
@@ -36,7 +38,7 @@ background-color: rgb(236, 198, 12);
 
 .emoji {
   flex-direction: column;
-  
+
 }
 
 .emo {
@@ -76,17 +78,25 @@ background-color: rgb(236, 198, 12);
   0% {
     opacity: 1;
   }
+
   100% {
     opacity: 0;
   }
 }
+
 @keyframes blink {
   0% {
-    opacity: 1;  /* Visibilité totale au début */
+    opacity: 1;
+    /* Visibilité totale au début */
   }
+
   50% {
-    opacity: 0;  /* Invisible à 50% de la durée */
+    opacity: 0;
+    /* Invisible à 50% de la durée */
   }
+
   100% {
-    opacity: 1;  /* De nouveau visible à la fin */
-  }}
+    opacity: 1;
+    /* De nouveau visible à la fin */
+  }
+}

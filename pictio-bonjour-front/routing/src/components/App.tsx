@@ -10,11 +10,10 @@ enum States {
   Done = "done",
 }
 
-enum EGameState
-{
-    waiting,
-    running, 
-    done,
+enum EGameState {
+  waiting,
+  running,
+  done,
 }
 
 
@@ -58,25 +57,38 @@ function App() {
         starRefs.current.push(null);
       }
     }
+    const interval = setInterval(() => {
+      // Initialisation des cercles
+      starRefs.current.forEach((ref) => {
+        if (ref) {
+          if (ref.style.top === "" || ref.style.top === "0px" || ref.style.left === "" || ref.style.left === "0px") {
+            console.log("Assinign new position")
+            const newPos = getRandomPosition();
 
-    // Initialisation des cercles
-    starRefs.current.forEach((ref, index) => {
-      if (ref) {
-        const { x, y } = getRandomPosition();
-        ref.style.position = "absolute";
-        ref.style.left = `${x}px`;
-        ref.style.top = `${y}px`;
-        ref.style.backgroundColor = getRandomColor();
+            ref.style.top = newPos.x + "px";
+            ref.style.left = newPos.y + "px";
+            ref.style.background = getRandomColor();
+          }
+          const xPos = parseFloat(ref.style.left || "0");
+          const yPos = parseFloat(ref.style.top || "0");
 
-        // Ajouter un gestionnaire pour changer la position à chaque cycle
-        ref.addEventListener("animationiteration", () => {
           const newPos = getRandomPosition();
-          ref.style.left = `${newPos.x}px`;
-          ref.style.top = `${newPos.y}px`;
-          ref.style.backgroundColor = getRandomColor();
-        });
-      }
-    });
+          const newXPos = xPos + (newPos.x - xPos) / 10000;
+          const newYPos = yPos + (newPos.y - yPos) / 10000;
+
+          // Constrain the new position to stay within the viewport
+          const constrainedXPos = Math.max(0, Math.min(newXPos, window.innerWidth - ref.offsetWidth));
+          const constrainedYPos = Math.max(0, Math.min(newYPos, window.innerHeight - ref.offsetHeight));
+
+          ref.style.left = `${constrainedXPos}px`;
+          ref.style.top = `${constrainedYPos}px`;
+
+          ref.style.position = "absolute";
+
+        }
+      });
+    }, 1);
+    return () => clearInterval(interval)
   }, [playerCount]);
 
   window.onbeforeunload = function () {
@@ -85,7 +97,7 @@ function App() {
 
   useEffect(() => {
     connectionRef.current = new HubConnectionBuilder()
-      .withUrl("http://localhost:5095/hub/game")
+      .withUrl("/hub/game")
       .build();
 
     connectionRef.current.start().then(async () => {
@@ -93,10 +105,11 @@ function App() {
         playerType: EPlayerType;
         potentials: string[];
         state: EGameState;
-    }>("JoinGame");
+        playersCount: number;
+      }>("JoinGame");
       setUserType(res.playerType);
-      if(res.state === EGameState.running)
-      {
+      setPlayerCount(res.playersCount);
+      if (res.state === EGameState.running) {
         setPotentialEmoji(res.potentials);
         setCurrentState(States.Playing);
       }
@@ -141,7 +154,6 @@ function App() {
           <>
 
             <p className="title">less is more</p>
-            <p style={{fontSize: "0.5rem"}}>Test</p>
             <div style={{}}>
               {userType === 0 ? <PlayButton onClick={play} /> : ""}
             </div>
@@ -159,9 +171,9 @@ function App() {
         return (
           <div className="container">
             {userType === EPlayerType.Drawer ?
-                <div>
-                  <p style={{ fontSize: "2em", padding: 0, margin: 0 }}>{String.fromCodePoint(parseInt(hexCode, 16))}</p>
-                </div>
+              <div>
+                <p style={{ fontSize: "2em", padding: 0, margin: 0 }}>{String.fromCodePoint(parseInt(hexCode, 16))}</p>
+              </div>
               :
               <div
 
@@ -171,14 +183,14 @@ function App() {
                   gap: "10px",
                   flexWrap: "nowrap",
                   justifyContent: "center",
-                  backgroundColor: canSubmit?"rgba(255, 255, 255, 0.8)":"rgba(0, 0, 0, 0.8)",
+                  backgroundColor: canSubmit ? "rgba(255, 255, 255, 0.8)" : "rgba(0, 0, 0, 0.8)",
                   padding: "10px",
                   borderRadius: "10px",
                 }}
               >
                 {potential_emojis.map((emoji, index) => (
                   <div key={index} onClick={() => submitEmoji(emoji)} >
-                    <p style={{ fontSize: "2em", margin: "0", color: canSubmit?"white":"rgba(0, 0, 0, 0.8)", cursor: "pointer" }}>  {String.fromCodePoint(parseInt(emoji.split("U+")[1], 16))}</p>
+                    <p style={{ fontSize: "2em", margin: "0", color: canSubmit ? "white" : "rgba(0, 0, 0, 0.8)", cursor: "pointer" }}>  {String.fromCodePoint(parseInt(emoji.split("U+")[1], 16))}</p>
                   </div>
                 ))}
               </div>
