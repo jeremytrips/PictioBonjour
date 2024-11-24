@@ -37,7 +37,7 @@ const colors = [
 
 const MAX_VALUE = 10_000;
 
-const Paint = (props: { userState: EPlayerType, connection: HubConnection}) => {
+const Paint = (props: { userState: EPlayerType, connection: HubConnection }) => {
   const [color, setColor] = useState<string>(colors[0]);
   const [drawAction, setDrawAction] = useState<DrawAction>(DrawAction.Scribble);
   const [scribbles, setScribbles] = useState<Scribble[]>([]);
@@ -190,7 +190,7 @@ const Paint = (props: { userState: EPlayerType, connection: HubConnection}) => {
 
   return (
     <div
-      onMouseLeave={()=>{
+      onMouseLeave={() => {
         if (isPainting.current) {
           isPainting.current = false;
         }
@@ -216,7 +216,7 @@ const Paint = (props: { userState: EPlayerType, connection: HubConnection}) => {
               <img
                 src={"/assets/erase.png"}
                 alt="Clear"
-                style={{ width: 30, height: 30 }}
+                style={{ width: 20, height: 20 }}
               />
             </div>
           </div>
@@ -224,10 +224,7 @@ const Paint = (props: { userState: EPlayerType, connection: HubConnection}) => {
         </div>
         : null}
 
-      <CuteGauge
-        value={100 - Math.round(100 - (dataframeSize / MAX_VALUE) * 100)}
-        maxValue={100}
-      />
+
       <Stage
         width={CANVAS_SIZE}
         height={CANVAS_SIZE}
@@ -267,6 +264,10 @@ const Paint = (props: { userState: EPlayerType, connection: HubConnection}) => {
           <Transformer ref={transformerRef} />
         </Layer>
       </Stage>
+      <CuteGauge
+        value={100 - Math.round(100 - (dataframeSize / MAX_VALUE) * 100)}
+        maxValue={100}
+      />
     </div>
   );
 };

@@ -22,17 +22,22 @@ public class GameManagerHub : Hub
 
     }
   
-    public async Task<EPlayerType> JoinGame()
+    public async Task<object> JoinGame()
     {
         var playerType = _gameManagerService.JoinGame(Context.ConnectionId);
         await Clients.Caller.SendAsync(StatusChanged, playerType);
         await Clients.All.SendAsync(PlayerListUpdated, _gameManagerService.AmountOfPlayers);
         Console.WriteLine("Player joined");
         Console.WriteLine(_gameManagerService.AmountOfPlayers + " players in game");
-        return playerType;
+        return new{
+            playerType,
+            potentials=_gameManagerService.Game.Potentials,
+            state = _gameManagerService.Game.State
+        };
     }
     public async Task OnGameStarter()
     {
+        _gameManagerService.Game.State = EGameSate.running;
         _gameManagerService.ResetGame(Context.ConnectionId);
         await Clients.Caller.SendAsync("ReceiveTargetEmojis", _gameManagerService.Game.Target); 
         await Clients.Others.SendAsync("ReceivePotentialEmojis", _gameManagerService.Game.Potentials);

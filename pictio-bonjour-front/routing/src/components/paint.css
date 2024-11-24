@@ -9,7 +9,7 @@
 
 .colorsPallete{
     display: flex;
-    margin: 20px 0;
+    align-items: center;
     gap: 10px;
     flex: 3;
 }
@@ -26,9 +26,9 @@
 .painterheader{
     display: flex;
     gap: 5px;
-    margin: 20px 0;
+    margin: 5px 0;
     background-color: white;
-    padding: 15px;
+    padding: 5px;
     border-radius: 15px;
     justify-content: space-around;
 }

@@ -10,6 +10,14 @@ enum States {
   Done = "done",
 }
 
+enum EGameState
+{
+    waiting,
+    running, 
+    done,
+}
+
+
 export enum EPlayerType {
   Drawer,
   Player,
@@ -81,8 +89,17 @@ function App() {
       .build();
 
     connectionRef.current.start().then(async () => {
-      const playerType = await connectionRef.current!.invoke<EPlayerType>("JoinGame");
-      setUserType(playerType);
+      const res = await connectionRef.current!.invoke<{
+        playerType: EPlayerType;
+        potentials: string[];
+        state: EGameState;
+    }>("JoinGame");
+      setUserType(res.playerType);
+      if(res.state === EGameState.running)
+      {
+        setPotentialEmoji(res.potentials);
+        setCurrentState(States.Playing);
+      }
     });
 
     connectionRef.current.on("onStatusChanged", (state) => {
@@ -132,23 +149,43 @@ function App() {
               {userType === 0 ? <PlayButton onClick={play} /> : ""}
             </div>
             <div className="user-animations">
-              {Array.from({ length: playerCount }).map((_, index) => (
+              {starRefs.current.map((_, index) => (
                 <div
                   key={index}
                   className="user-animation"
                   ref={(el) => (starRefs.current[index] = el)}
                 />
               ))}
-            </div>
-          </>
+            </div>          </>
         );
       case States.Playing:
         return (
-          <>
-            <div className="container" style={{ display: "flex", flexDirection: "row" }}>
-              <Paint connection={connectionRef.current!} userState={userState!} />
-            </div>
-          </>
+          <div className="container">
+            {userType === EPlayerType.Drawer ?
+                <div>
+                  <p style={{ fontSize: "2em", padding: 0, margin: 0 }}>{String.fromCodePoint(parseInt(hexCode, 16))}</p>
+                </div>
+              :
+              <div
+
+                className="emoji-container"
+                style={{
+                  display: "flex",
+                  gap: "10px",
+                  flexWrap: "nowrap",
+                  justifyContent: "center",
+                }}
+              >
+                {potential_emojis.map((emoji, index) => (
+                  <div key={index} onClick={() => submitEmoji(emoji)} >
+                    <p style={{ fontSize: "2em", margin: "0" }}>  {String.fromCodePoint(parseInt(emoji.split("U+")[1], 16))}</p>
+                  </div>
+                ))}
+              </div>
+            }
+
+            <Paint connection={connectionRef.current!} userState={userType!} />
+          </div>
         );
       default:
         return null;
@@ -180,39 +217,8 @@ function App() {
   }
 
   return (
-    <div
-      className="container"
+    <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}
     >
-      {userType === EPlayerType.Drawer && (
-        <>
-          {hexCode && (
-            <div>
-              <p style={{ fontSize: "5em" }}>{String.fromCodePoint(parseInt(hexCode, 16))}</p>
-              <p>{target_emojis}</p>
-            </div>
-          )}
-        </>
-      )}
-      {/* Si l'utilisateur est un Guesser, affiche les emojis potentiels */}
-      {userType === EPlayerType.Player && potential_emojis && (
-        <div
-
-          className="emoji-container"
-          style={{
-            display: "flex",
-            gap: "10px",
-            flexWrap: "nowrap",
-            justifyContent: "center",
-          }}
-        >
-          {potential_emojis.map((emoji, index) => (
-            <div key={index} onClick={() => submitEmoji(emoji)} >
-              <p style={{ fontSize: "2em", margin: "0" }}>  {String.fromCodePoint(parseInt(emoji.split("U+")[1], 16))}</p>
-              <p>{emoji}</p>
-            </div>
-          ))}
-        </div>
-      )}
       {renderComponent(currentState)}
     </div>
   );
