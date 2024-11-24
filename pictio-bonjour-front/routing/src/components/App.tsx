@@ -139,7 +139,9 @@ function App() {
       case States.Ready:
         return (
           <>
+
             <p className="title">less is more</p>
+            <p style={{fontSize: "0.5rem"}}>Test</p>
             <div style={{}}>
               {userType === 0 ? <PlayButton onClick={play} /> : ""}
             </div>
@@ -169,11 +171,14 @@ function App() {
                   gap: "10px",
                   flexWrap: "nowrap",
                   justifyContent: "center",
+                  backgroundColor: canSubmit?"rgba(255, 255, 255, 0.8)":"rgba(0, 0, 0, 0.8)",
+                  padding: "10px",
+                  borderRadius: "10px",
                 }}
               >
                 {potential_emojis.map((emoji, index) => (
                   <div key={index} onClick={() => submitEmoji(emoji)} >
-                    <p style={{ fontSize: "2em", margin: "0" }}>  {String.fromCodePoint(parseInt(emoji.split("U+")[1], 16))}</p>
+                    <p style={{ fontSize: "2em", margin: "0", color: canSubmit?"white":"rgba(0, 0, 0, 0.8)", cursor: "pointer" }}>  {String.fromCodePoint(parseInt(emoji.split("U+")[1], 16))}</p>
                   </div>
                 ))}
               </div>
@@ -189,16 +194,13 @@ function App() {
 
   async function submitEmoji(emoji: string): Promise<void> {
     if (!canSubmit) {
-      console.log("Can't submit")
       return;
     }
     console.log(emoji)
     if (await connectionRef.current?.invoke("SubmitEmoji", emoji)) {
       await resetState(EPlayerType.Drawer);
-      console.log("Sucees")
     } else {
       setCanSubmit(false)
-      console.log("Fail")
 
     }
   }
