@@ -18,10 +18,10 @@ html, body {
 position: absolute;
 width: 20px;
 height:20px;
-border-radius: 50%; /* Forme circulaire */
+border-radius: 50%; 
 top:0;
 left:500;
-animation:blink 4s infinite;
+animation:blink 5s infinite;
 background-color: rgb(236, 198, 12);
 
 }

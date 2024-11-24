@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { HubConnection, HubConnectionBuilder } from '@microsoft/signalr'
+import { HubConnection, HubConnectionBuilder } from '@microsoft/signalr';
 import "./App.css";
 import PlayButton from "./PlayButton";
 import Paint from "./Paint";
@@ -20,35 +20,56 @@ function App() {
   const [userState, SetUserState] = useState<UserState | null>(null);
   const [target_emojis, setTargetEmoji] = useState("");
   const [potential_emojis, setPotentialEmoji] = useState<string[]>([]);
+  const [playerCount, setPlayerCount] = useState(0);
   const connectionRef = useRef<HubConnection | null>(null);
-  const hexCode = target_emojis.split("U+")[1]; 
-  const starRefs = useRef<(HTMLDivElement | null)[]>(new Array(10).fill(null));
+  const hexCode = target_emojis.split("U+")[1];
+  const starRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   const getRandomPosition = () => {
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
 
-    const x = Math.random() < 0.5 ? Math.random() * (viewportWidth / 2) : viewportWidth / 2 + Math.random() * (viewportWidth / 2);
-    const y = Math.random() < 0.5 ? Math.random() * (viewportHeight / 2) : viewportHeight / 2 + Math.random() * (viewportHeight / 2);
+    const x = Math.random() * viewportWidth;
+    const y = Math.random() * viewportHeight;
 
     return { x, y };
   };
+
   const getRandomColor = () => {
-    const r = Math.floor(Math.random() * 256); 
-    const g = Math.floor(Math.random() * 256); 
-    const b = Math.floor(Math.random() * 256); 
-    return `rgb(${r}, ${g}, ${b})`; 
+    const r = Math.floor(Math.random() * 256);
+    const g = Math.floor(Math.random() * 256);
+    const b = Math.floor(Math.random() * 256);
+    return `rgb(${r}, ${g}, ${b})`;
   };
+
   useEffect(() => {
-    for (let i = 0; i < starRefs.current.length; i++) {
-      const { x, y } = getRandomPosition();
-      if (starRefs.current[i]) {
-        starRefs.current[i]!.style.left = `${x}px`;
-        starRefs.current[i]!.style.top = `${y}px`;
-        starRefs.current[i]!.style.backgroundColor = getRandomColor();
+    if (starRefs.current.length !== playerCount) {
+      starRefs.current = starRefs.current.slice(0, playerCount);
+      for (let i = starRefs.current.length; i < playerCount; i++) {
+        starRefs.current.push(null);
       }
     }
-  }, []);
+
+    // Initialisation des cercles
+    starRefs.current.forEach((ref, index) => {
+      if (ref) {
+        const { x, y } = getRandomPosition();
+        ref.style.position = "absolute";
+        ref.style.left = `${x}px`;
+        ref.style.top = `${y}px`;
+        ref.style.backgroundColor = getRandomColor();
+
+        // Ajouter un gestionnaire pour changer la position à chaque cycle
+        ref.addEventListener("animationiteration", () => {
+          const newPos = getRandomPosition();
+          ref.style.left = `${newPos.x}px`;
+          ref.style.top = `${newPos.y}px`;
+          ref.style.backgroundColor = getRandomColor();
+        });
+      }
+    });
+  }, [playerCount]);
+
   window.onbeforeunload = function () {
     connectionRef.current?.invoke("LeaveGame").then(() => console.log("left"));
   };
@@ -61,18 +82,23 @@ function App() {
     connectionRef.current.start().then(() => {
       connectionRef.current!.invoke("JoinGame");
     });
+
     connectionRef.current.on("onStatusChanged", (state) => {
       SetUserState(state);
     });
 
-    connectionRef.current.on("ReceivePotentialEmojis", (data)=>{
+    connectionRef.current.on("ReceivePotentialEmojis", (data) => {
       setPotentialEmoji(data);
       setCurrentState(States.Playing);
     });
 
-    connectionRef.current.on("ReceiveTargetEmojis", (data)=>{
+    connectionRef.current.on("ReceiveTargetEmojis", (data) => {
       setTargetEmoji(data);
       setCurrentState(States.Playing);
+    });
+
+    connectionRef.current.on("onplayerListUpdated", (data) => {
+      setPlayerCount(data);
     });
 
     return () => {
@@ -83,7 +109,7 @@ function App() {
 
   const play = () => {
     connectionRef.current?.invoke("OnGameStarter");
-  }
+  };
 
   function renderComponent(state: States) {
     switch (state) {
@@ -91,23 +117,24 @@ function App() {
         return (
           <>
             <p className="title">less is more</p>
-            <div style={{}}>
+            <div>
               {userState === 0 ? <PlayButton onClick={play} /> : ""}
             </div>
             <div className="user-animations">
-        {starRefs.current.map((_, index) => (
-          <div 
-            key={index} 
-            className="user-animation" 
-            ref={(el) => (starRefs.current[index] = el)} 
-          />
-        ))}
-      </div>          </>
+              {Array.from({ length: playerCount }).map((_, index) => (
+                <div
+                  key={index}
+                  className="user-animation"
+                  ref={(el) => (starRefs.current[index] = el)}
+                />
+              ))}
+            </div>
+          </>
         );
       case States.Playing:
         return (
           <>
-            <div className="container" style={{display: 'flex', flexDirection: 'row'}}>
+            <div className="container" style={{ display: "flex", flexDirection: "row" }}>
               <Paint connection={connectionRef.current!} userState={userState!} />
             </div>
           </>
@@ -119,6 +146,7 @@ function App() {
 
   return (
     <div className="container emoji">
+      <p>{playerCount} player(s)</p>
       {userState === UserState.Drawer && (
         <>
           {hexCode && (
