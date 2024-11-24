@@ -10,14 +10,15 @@ enum States {
   Done = "done",
 }
 
-export enum UserState {
+export enum EPlayerType {
   Drawer,
   Player,
 }
 
 function App() {
+  const [canSubmit, setCanSubmit] = useState(true);
   const [currentState, setCurrentState] = useState(States.Ready);
-  const [userState, SetUserState] = useState<UserState | null>(null);
+  const [userType, setUserType] = useState<EPlayerType | null>(null);
   const [target_emojis, setTargetEmoji] = useState("");
   const [potential_emojis, setPotentialEmoji] = useState<string[]>([]);
   const [playerCount, setPlayerCount] = useState(0);
@@ -79,12 +80,13 @@ function App() {
       .withUrl("http://localhost:5095/hub/game")
       .build();
 
-    connectionRef.current.start().then(() => {
-      connectionRef.current!.invoke("JoinGame");
+    connectionRef.current.start().then(async () => {
+      const playerType = await connectionRef.current!.invoke<EPlayerType>("JoinGame");
+      setUserType(playerType);
     });
 
     connectionRef.current.on("onStatusChanged", (state) => {
-      SetUserState(state);
+      setUserType(state);
     });
 
     connectionRef.current.on("ReceivePotentialEmojis", (data) => {
@@ -93,8 +95,17 @@ function App() {
     });
 
     connectionRef.current.on("ReceiveTargetEmojis", (data) => {
-      setTargetEmoji(data);
-      setCurrentState(States.Playing);
+      setTargetEmoji(data)
+      setCurrentState(States.Playing)
+    })
+
+    connectionRef.current.on("onStatusChanged", (state) => {
+      setUserType(state);
+    });
+
+    connectionRef.current.on("GameReset", () => {
+      console.log("Recieved a game reset evt.")
+      resetState(EPlayerType.Player);
     });
 
     connectionRef.current.on("onplayerListUpdated", (data) => {
@@ -117,8 +128,8 @@ function App() {
         return (
           <>
             <p className="title">less is more</p>
-            <div>
-              {userState === 0 ? <PlayButton onClick={play} /> : ""}
+            <div style={{}}>
+              {userType === 0 ? <PlayButton onClick={play} /> : ""}
             </div>
             <div className="user-animations">
               {Array.from({ length: playerCount }).map((_, index) => (
@@ -144,25 +155,60 @@ function App() {
     }
   }
 
+  async function submitEmoji(emoji: string): Promise<void> {
+    if (!canSubmit) {
+      console.log("Can't submit")
+      return;
+    }
+    console.log(emoji)
+    if (await connectionRef.current?.invoke("SubmitEmoji", emoji)) {
+      await resetState(EPlayerType.Drawer);
+      console.log("Sucees")
+    } else {
+      setCanSubmit(false)
+      console.log("Fail")
+
+    }
+  }
+
+  async function resetState(playerType: EPlayerType): Promise<void> {
+    setUserType(playerType);
+    setCurrentState(States.Ready);
+    setCanSubmit(true);
+    await connectionRef.current!.invoke<EPlayerType>("JoinGame");
+
+  }
+
   return (
-    <div className="container emoji">
-      <p>{playerCount} player(s)</p>
-      {userState === UserState.Drawer && (
+    <div
+      className="container"
+    >
+      {userType === EPlayerType.Drawer && (
         <>
           {hexCode && (
-            <div className="emoji-container">
-              <div className="emo">
-                {String.fromCodePoint(parseInt(hexCode, 16))}
-              </div>
+            <div>
+              <p style={{ fontSize: "5em" }}>{String.fromCodePoint(parseInt(hexCode, 16))}</p>
+              <p>{target_emojis}</p>
             </div>
           )}
         </>
       )}
-      {userState === UserState.Player && potential_emojis && (
-        <div className="container emoji-container">
+      {/* Si l'utilisateur est un Guesser, affiche les emojis potentiels */}
+      {userType === EPlayerType.Player && potential_emojis && (
+        <div
+
+          className="emoji-container"
+          style={{
+            display: "flex",
+            gap: "10px",
+            flexWrap: "nowrap",
+            justifyContent: "center",
+          }}
+        >
           {potential_emojis.map((emoji, index) => (
-            <div className="emo" key={index}>
-              {String.fromCodePoint(parseInt(emoji.split("U+")[1], 16))}
+            <div key={index} onClick={() => submitEmoji(emoji)} >
+              <p style={{ fontSize: "2em", margin: "0" }}>  {String.fromCodePoint(parseInt(emoji.split("U+")[1], 16))}</p>
+              <p>{emoji}</p>
             </div>
           ))}
         </div>

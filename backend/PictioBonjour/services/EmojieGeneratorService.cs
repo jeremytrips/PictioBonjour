@@ -2,14 +2,13 @@
 {
     public class EmojieGeneratorService
     {
-        private List<string> emojis = new List<string>();
-        public string randomTargetEmojie {  get; private  set; }
+        private List<string> _emojis = [];
+        private Random _random = new();
+
         public EmojieGeneratorService()
         {
             addEmojisToListEmjis();
-            GenerateTargetEmoji();
-            GeneratePotentialEmoji();
-          
+
         }
 
         private void addEmojisToListEmjis()
@@ -25,7 +24,7 @@
                         while ((s = sr.ReadLine()) != null)
                         {
 
-                            emojis.Add(s);
+                            _emojis.Add(s);
                         }
                     }
                 }
@@ -43,48 +42,18 @@
 
         public string GenerateTargetEmoji()
         {
-            if (emojis == null || emojis.Count == 0)
-            {
-                throw new InvalidOperationException("La liste des emojis est vide ou nulle.");
-            }
-            Random targetEmojieRand = new Random();
-            int randomIndex = targetEmojieRand.Next(emojis.Count);
-            randomTargetEmojie = emojis[randomIndex];
-             return randomTargetEmojie;
+            int randomIndex = _random.Next(_emojis.Count);
+            return _emojis[randomIndex];
         }
         public List<string> GeneratePotentialEmoji()
         {
-            
-            if (emojis == null || emojis.Count == 0)
+            List<string> potentialEmojis = [];
+            while (potentialEmojis.Count < 6) // 1 cible + 5 options = 6 au total
             {
-                throw new InvalidOperationException("La liste des emojis est vide ou nulle.");
+                int randomIndex = _random.Next(_emojis.Count);
+                potentialEmojis.Add(_emojis[randomIndex]);
             }
-
-            HashSet<string> uniqueEmojis = new HashSet<string> { randomTargetEmojie };
-            Random random = new Random();
-
-            while (uniqueEmojis.Count < 6) // 1 cible + 5 options = 6 au total
-            {
-                int randomIndex = random.Next(emojis.Count);
-                uniqueEmojis.Add(emojis[randomIndex]);
-            }
-               List<string> potentialEmojis =uniqueEmojis.ToList();
-                ShuffleList(potentialEmojis);
-                return potentialEmojis ;
-
-        }
-        static void ShuffleList(List<string> list)
-        {
-            Random rng = new Random();
-            int n = list.Count;
-            while (n > 1)
-            {
-                n--;
-                int k = rng.Next(n + 1);
-                string value = list[k];
-                list[k] = list[n];
-                list[n] = value;
-            }
+            return potentialEmojis;
         }
     }
 }

@@ -5,28 +5,33 @@ namespace PictioBonjour.services;
 public class GameManagerService
 {
 
-    private Game? _game;   
-    
-    public  EmojieGeneratorService EmojieGenerator { get; set; }
-    public GameManagerService(EmojieGeneratorService emojieGenerator)
-    {
-        EmojieGenerator = emojieGenerator ?? throw new ArgumentNullException(nameof(emojieGenerator));
-    }
-  
-    
+    private Game? _game;
+    public Game Game => _game ?? throw new Exception("No game is running");
+    public EmojieGeneratorService EmojieGenerator { get; set; }
+    private Random _randomizer = new Random();
+
     public int AmountOfPlayers => _game?.Players.Count ?? 0;
     public string? CurrentDrawer => _game?.CurrentDrawer;
+
+    public GameManagerService(EmojieGeneratorService emojieGenerator)
+    {
+        EmojieGenerator = emojieGenerator;
+    }
+
 
     public EPlayerType JoinGame(string connectionId)
     {
         if (_game is null)
         {
+            var potentials = EmojieGenerator.GeneratePotentialEmoji();
             _game = new Game()
             {
                 Id = Guid.NewGuid().ToString(),
                 State = EGameSate.waiting,
                 CurrentDrawer = connectionId,
-                Players = [connectionId]
+                Players = [connectionId],
+                Potentials = potentials,
+                Target = potentials[new Random().Next(0, potentials.Count)]
             };
             return EPlayerType.Drawer;
         }
@@ -38,6 +43,18 @@ public class GameManagerService
         return EPlayerType.Player;
     }
 
+    public void ResetGame(string connectionId)
+    {
+        var potentials = EmojieGenerator.GeneratePotentialEmoji();
+        if (_game != null)
+        {
+            _game.Target = potentials.ElementAt(_randomizer.Next(0, potentials.Count));
+            _game.Potentials = potentials;
+            _game.CurrentDrawer = connectionId;
+            _game.State = EGameSate.running;
+        }
+    }
+
     public string? GetRandomAndAssignPlayer()
     {
         if (_game is null)
@@ -46,11 +63,12 @@ public class GameManagerService
         }
         else
         {
-            if(_game.Players.Count == 0){
+            if (_game.Players.Count == 0)
+            {
                 ResetGame();
                 return null;
             }
-                
+
             var random = new Random();
             var randomIndex = random.Next(0, _game.Players.Count);
             var newDrawer = _game.Players[randomIndex];
@@ -69,23 +87,13 @@ public class GameManagerService
         _game.Players.Add(userId);
     }
 
-    public void LeaveGame(string gameId, string userId)
-    {
-        if (_game is null)
-        {
-            return;
-        }
-        _game.Players.Remove(userId);
-    }
-
     public void LeaveGame(string connectionId)
     {
-        var a = new List<int>(){1,2,3};
         if (_game is null)
         {
             return;
         }
-        if(!_game.Players.Remove(connectionId))
+        if (!_game.Players.Remove(connectionId))
             throw new Exception("Player not found");
     }
 
@@ -94,6 +102,9 @@ public class GameManagerService
         _game = null;
     }
 
-    
+    internal bool SubmitEmoji(string playerEmojisChoice)
+    {
+        return playerEmojisChoice == _game?.Target;
+    }
 }
 

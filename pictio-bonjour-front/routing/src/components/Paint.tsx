@@ -5,7 +5,7 @@ import { KonvaEventObject } from "konva/lib/Node";
 import ExportIcon from "../assets/images.png";
 import OnclearIcon from "../assets/onclear.png";
 import Konva from "konva";
-import { UserState } from "./App";
+import { EPlayerType } from "./App";
 import { HubConnection } from "@microsoft/signalr";
 import CuteGauge from "./gauge";
 import "./paint.css"
@@ -37,7 +37,7 @@ const colors = [
 
 const MAX_VALUE = 10_000;
 
-const Paint = (props: { userState: UserState, connection: HubConnection}) => {
+const Paint = (props: { userState: EPlayerType, connection: HubConnection}) => {
   const [color, setColor] = useState<string>(colors[0]);
   const [drawAction, setDrawAction] = useState<DrawAction>(DrawAction.Scribble);
   const [scribbles, setScribbles] = useState<Scribble[]>([]);
@@ -146,7 +146,7 @@ const Paint = (props: { userState: UserState, connection: HubConnection}) => {
     if (!isPainting.current || drawAction !== DrawAction.Scribble)
       return;
 
-    if (props.userState === UserState.Drawer) {
+    if (props.userState === EPlayerType.Drawer) {
       handleSendDrawEvent();
     }
 
@@ -196,7 +196,7 @@ const Paint = (props: { userState: UserState, connection: HubConnection}) => {
         }
       }}
     >
-      {props.userState === UserState.Drawer ?
+      {props.userState === EPlayerType.Drawer ?
         <div className="painterheader">
           <div className="colorsPallete">
             {colors.map((c) => (

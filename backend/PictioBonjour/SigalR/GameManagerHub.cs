@@ -22,34 +22,20 @@ public class GameManagerHub : Hub
 
     }
   
-    public async Task JoinGame()
+    public async Task<EPlayerType> JoinGame()
     {
         var playerType = _gameManagerService.JoinGame(Context.ConnectionId);
         await Clients.Caller.SendAsync(StatusChanged, playerType);
         await Clients.All.SendAsync(PlayerListUpdated, _gameManagerService.AmountOfPlayers);
         Console.WriteLine("Player joined");
         Console.WriteLine(_gameManagerService.AmountOfPlayers + " players in game");
+        return playerType;
     }
     public async Task OnGameStarter()
     {
-        if (_gameManagerService.EmojieGenerator == null)
-        {
-            throw new InvalidOperationException("EmojiGeneratorService is not initialized.");
-        }
-       
-        if (_gameManagerService.CurrentDrawer != Context.ConnectionId)
-        {
-            throw new InvalidOperationException("Not the drawer");
-        }
-
-
-        // G�n�rer les emojis
-        var targetEmojis = _gameManagerService.EmojieGenerator.GenerateTargetEmoji();
-        var potentialEmojis = _gameManagerService.EmojieGenerator.GeneratePotentialEmoji();
-
-        // Envoyer les emojis aux joueurs
-        await Clients.Caller.SendAsync("ReceiveTargetEmojis", targetEmojis); // Drawer re�oit les cibles
-        await Clients.Others.SendAsync("ReceivePotentialEmojis", potentialEmojis);
+        _gameManagerService.ResetGame(Context.ConnectionId);
+        await Clients.Caller.SendAsync("ReceiveTargetEmojis", _gameManagerService.Game.Target); 
+        await Clients.Others.SendAsync("ReceivePotentialEmojis", _gameManagerService.Game.Potentials);
     }
 
     public async Task LeaveGame()
@@ -80,26 +66,14 @@ public class GameManagerHub : Hub
         Console.WriteLine(canvas.Length);
         Clients.Others.SendAsync(DrawEventResp, canvas);
     }
-    public async Task SubmitEmoji(string PlayerEmojisChoice)
+    public async Task<bool> SubmitEmoji(string PlayerEmojisChoice)
     {
-        if (PlayerEmojisChoice == null) return;
-        string _playerEmojisChoice = GetUnicodeWithPrefix(PlayerEmojisChoice);
-        string targetEmojis= _gameManagerService.EmojieGenerator.randomTargetEmojie; 
-        
-        
-        bool isCorrect = PlayerEmojisChoice == targetEmojis; //si un players choisit the wrong emojis gameIs stopped 
-        OnResetGame();
-        await Clients.All.SendAsync("GameUpdate", new { isCorrect, targetEmojis });
-    }
-
-    private string GetUnicodeWithPrefix(string emoji)
-    {
-        int codePoint = emoji[0];
-        return $"U+{codePoint:X4}";
-    }
-
-    public void OnResetGame(){
-        _gameManagerService.ResetGame();
-        Clients.All.SendAsync(GameStopped);
+        if(_gameManagerService.SubmitEmoji(PlayerEmojisChoice)){
+            await Clients.Others.SendAsync("GameReset");
+            _gameManagerService.ResetGame();
+            return true;
+        }else{
+            return false;            
+        }
     }
 }
